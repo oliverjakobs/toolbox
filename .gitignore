@@ -1,0 +1,5 @@
+#Directories
+.vscode/
+
+#files
+*.exe
