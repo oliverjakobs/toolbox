@@ -718,12 +718,13 @@ int json_int(char* json, char* query, int* query_params)
 //   otherwise returns 0.0
 double json_double(char* json, char* query, int* query_params)
 {
-    json_element_t elem;
-    double result;
-    json_read_param(json, query, &elem, query_params);
-    if (elem.data_type == JSON_ERROR)
+    json_element_t element;
+    json_read_param(json, query, &element, query_params);
+    if (element.data_type == JSON_ERROR)
         return 0.0;
-    json_atof((char*)elem.value, &result);
+    
+    double result;
+    json_atof((char*)element.value, &result);
     return result;
 }
 
@@ -734,18 +735,17 @@ double json_double(char* json, char* query, int* query_params)
 // Note: any element can be returned as a string
 int json_string(char* json, char* query, char* dest, int dest_len, int* query_params)
 {
-    json_element_t elem;
-    int i;
+    json_element_t element;
 
-    *dest= '\0';
-    json_read_param(json, query, &elem, query_params);
-    if (elem.data_type == JSON_ERROR)
+    *dest = '\0';
+    json_read_param(json, query, &element, query_params);
+    if (element.data_type == JSON_ERROR)
         return 0;
 
-    for (i=0; (i < elem.bytelen) && (i < dest_len - 1); i++)
-        *dest++ = ((char*)elem.value)[i];
-    *dest= '\0';
-    return elem.bytelen;
+    for (int i = 0; (i < element.bytelen) && (i < dest_len - 1); i++)
+        *dest++ = ((char*)element.value)[i];
+    *dest = '\0';
+    return element.bytelen;
 }
 
 // read unsigned int from string
@@ -757,7 +757,7 @@ char* json_atoi(char* p, unsigned int* result)
         x = (x*10) + (*p - '0');
         ++p;
     }
-    *result= x;
+    *result = x;
     return p;
 }
 
