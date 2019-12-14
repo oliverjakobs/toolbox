@@ -1,6 +1,6 @@
 // main.c
 //
-// Test harness command-line for jRead 
+// Test harness command-line for JSON 
 //
 //
 #define _CRT_SECURE_NO_WARNINGS			// stop complaining about unsafe functions
@@ -12,14 +12,12 @@
 #include <malloc.h>
 #include <string.h>
 
-
+#define JSON_IMPLEMENTATION
 #include "json.h"
-
 
 //-------------------------------------------------
 // Do a query and print the results
-//
-void testQuery(char* json, char* query)
+void test_query(char* json, char* query)
 {
     json_element_t element;
     json_read(json, query, &element);
@@ -33,13 +31,9 @@ void testQuery(char* json, char* query)
 
 //=================================================================
 // Examples
-// - whole bunch of jRead examples
-//
-void runExamples()
+// - whole bunch of JSON examples
+void run_examples()
 {
-    long l;
-    int i;
-    double d;
     char str[128];
     json_element_t array_element;
 
@@ -57,39 +51,39 @@ void runExamples()
         "  \"no\":  false\n"
         "}\n";
 
-    testQuery(example_json, "");
-    testQuery(example_json, "[1");
-    testQuery(example_json, "{'astring'");
-    testQuery(example_json, "{'number1'");
-    testQuery(example_json, "{'number2'");
-    testQuery(example_json, "{'anObject'");
-    testQuery(example_json, "{'anArray'");
-    testQuery(example_json, "{'isnull'");
-    testQuery(example_json, "{'yes'");
-    testQuery(example_json, "{'no'");
-    testQuery(example_json, "{'missing'");
-    testQuery(example_json, "{'anObject'{'two'");
-    testQuery(example_json, "{'anObject' {'two' {'obj2.2'");
-    testQuery(example_json, "{'anObject'{'three'");
-    testQuery(example_json, "{'anArray' [1");
-    testQuery(example_json, "{'anArray' [2 {'two.1'");
-    testQuery(example_json, "{'anArray' [4 [2");
-    testQuery(example_json, "{'anArray' [999");
+    test_query(example_json, "");
+    test_query(example_json, "[1");
+    test_query(example_json, "{'astring'");
+    test_query(example_json, "{'number1'");
+    test_query(example_json, "{'number2'");
+    test_query(example_json, "{'anObject'");
+    test_query(example_json, "{'anArray'");
+    test_query(example_json, "{'isnull'");
+    test_query(example_json, "{'yes'");
+    test_query(example_json, "{'no'");
+    test_query(example_json, "{'missing'");
+    test_query(example_json, "{'anObject'{'two'");
+    test_query(example_json, "{'anObject' {'two' {'obj2.2'");
+    test_query(example_json, "{'anObject'{'three'");
+    test_query(example_json, "{'anArray' [1");
+    test_query(example_json, "{'anArray' [2 {'two.1'");
+    test_query(example_json, "{'anArray' [4 [2");
+    test_query(example_json, "{'anArray' [999");
 
     printf("Empty array or object...\n");
-    testQuery( example_json, "{'emptyArray'");
-    testQuery( example_json, "{'emptyObject'");
+    test_query(example_json, "{'emptyArray'");
+    test_query(example_json, "{'emptyObject'");
 
     printf("Return the key at a given index in an object...\n");
-    testQuery(example_json, "{3");
-    testQuery(example_json, "{'anObject' {1");
-    testQuery(example_json, "{999");
+    test_query(example_json, "{3");
+    test_query(example_json, "{'anObject' {1");
+    test_query(example_json, "{999");
 
     // examples of helper functions
-    l = json_long(example_json, "{'number1'", NULL);        // 42
-    i = json_int(example_json, "{'yes'", NULL);             // 1    (BOOL example)
-    d = json_double(example_json, "{'number2'", NULL);      // -123.45
-    json_string(example_json, "{'astring'", str, 16, NULL); // "This is a strin\0" (buffer too short example)
+    long l = json_long(example_json, "{'number1'", NULL);       // 42
+    int i = json_int(example_json, "{'yes'", NULL);             // 1    (BOOL example)
+    double d = json_double(example_json, "{'number2'", NULL);   // -123.45
+    json_string(example_json, "{'astring'", str, 16, NULL);     // "This is a strin\0" (buffer too short example)
 
     printf("Helper Functions...\n");
     printf("  \"number1\"= %ld\n", l);
@@ -109,7 +103,7 @@ void runExamples()
     {
         // index the array using queryParam
         json_string((char*)array_element.value, "[*", str, 128, &i); 
-        printf("  anArray[%d] = %s\n", i, str );
+        printf("  anArray[%d] = %s\n", i, str);
     }
 
     // example using a parameter array
@@ -118,325 +112,124 @@ void runExamples()
         json_string((char*)array_element.value, "[*{*", str, 128, params);
         printf("\n  anArray[%d] objectKey[%d] = \"%s\"\n", params[0], params[1], str);
     }
-
 }
 
-//=================================================================
-//
-// Example used in article
-//
-#define NAMELEN 32
-struct NamesAndNumbers{
-    char Name[NAMELEN];
-    long Number;
-};
-
-void articleExample()
-{
-struct NamesAndNumbers people[42];
-json_element_t element;
-int i;
-char *pJson=
-"{"
-  "\"Company\": \"The Most Excellent Example Company\","
-  "\"Address\": \"Planet Earth\","
-  "\"Numbers\":["
-              "{ \"Name\":\"Fred\",   \"Ident\":12345 },"
-              "{ \"Name\":\"Jim\",    \"Ident\":\"87654\" },"
-              "{ \"Name\":\"Zaphod\", \"Ident\":\"0777621\" }"
-            "]"
-"}";
-  json_read( pJson, "{'Numbers'", &element );    // we expect "Numbers" to be an array
-  if( element.data_type == JREAD_ARRAY ) 
-  {
-      for( i=0; i<element.elements; i++ )    // loop for no. of elements in JSON
-      {
-          json_string( pJson, "{'Numbers'[*{'Name'", people[i].Name, NAMELEN, &i );
-          people[i].Number= json_long( pJson, "{'Numbers'[*{'Ident'", &i ); 
-      }
-  }
-  i=0;
-}
 //=================================================================
 //
 // Helper functions to read a JSON file into a malloc'd buffer with '\0' terminator
 //
-struct FileBuffer{
-    unsigned long length;			// length in bytes
-    unsigned char *data;			// malloc'd data, free with freeFileBuffer()
-};
+typedef struct
+{
+    unsigned long length;   // length in bytes
+    unsigned char* data;    // malloc'd data, free with freeFileBuffer()
+} file_buffer_t;
+
 #define FILE_BUFFER_MAXLEN 1024*1024
 
-unsigned long readFileBuffer( char *filename, struct FileBuffer *pbuf, unsigned long maxlen );
-void freeFileBuffer( struct FileBuffer *buf );
+unsigned long file_buffer_read(char* filename, file_buffer_t* buffer, unsigned long maxlen);
+void file_buffer_free(file_buffer_t* buffer);
 
-// readFileBuffer
+// file_buffer_read
 // - reads file into a malloc'd buffer with appended '\0' terminator
 // - limits malloc() to maxlen bytes
 // - if file size > maxlen then the function fails (returns 0)
 //
 // returns: length of file data (excluding '\0' terminator)
 //          0=empty/failed
-//
-unsigned long readFileBuffer( char *filename, struct FileBuffer *pbuf, unsigned long maxlen )
+unsigned long file_buffer_read(char* filename, file_buffer_t* buffer, unsigned long maxlen)
 {
-  FILE *fp;
-  int i;
+    FILE *file;
 
-    if( (fp=fopen(filename, "rb")) == NULL )
+    if ((file = fopen(filename, "rb")) == NULL)
     {
-        printf("Can't open file: %s\n", filename );
+        printf("Can't open file: %s\n", filename);
         return 0;
     }
     // find file size and allocate buffer for JSON file
-    fseek(fp, 0L, SEEK_END);
-    pbuf->length = ftell(fp);
-    if( pbuf->length >= maxlen )
+    fseek(file, 0L, SEEK_END);
+    buffer->length = ftell(file);
+    if (buffer->length >= maxlen)
     {
-        fclose(fp);
+        fclose(file);
         return 0;
     }
     // rewind and read file
-    fseek(fp, 0L, SEEK_SET);
-    pbuf->data= (unsigned char *)malloc( pbuf->length + 1 );
-    memset( pbuf->data, 0, pbuf->length+1 );	// +1 guarantees trailing \0
+    fseek(file, 0L, SEEK_SET);
+    buffer->data = (unsigned char*)malloc(buffer->length + 1);
+    memset(buffer->data, 0, buffer->length + 1); // +1 guarantees trailing \0
 
-    i= fread( pbuf->data, pbuf->length, 1, fp );	
-    fclose( fp );
-    if( i != 1 )
+    int i = fread(buffer->data, buffer->length, 1, file);
+    fclose(file);
+    if (i != 1)
     {
-        freeFileBuffer( pbuf );
+        file_buffer_free(buffer);
         return 0;
     }
-    return pbuf->length;
+    return buffer->length;
 }
 
-// freeFileBuffer
+// file_buffer_free
 // - free's buffer space and zeros it
-//
-void freeFileBuffer( struct FileBuffer *buf )
+void file_buffer_free(file_buffer_t* buffer)
 {
-    if( buf->data != NULL )
-        free( buf->data );
-    buf->data= 0;
-    buf->length= 0;
-}
-
-// read unsigned int from string
-unsigned int fast_atoi( char *p )
-{
-    unsigned int x = 0;
-    while (*p >= '0' && *p <= '9') {
-        x = (x*10) + (*p - '0');
-        ++p;
-    }
-    return x;
-};
-
-
-//====================================================================================
-//
-// Simple speed test
-//
-void runSpeedTest()
-{
-    char linebuf[128];
-    long runs=100000;
-    DWORD tStart, tEnd;
-    double elapsed;
-    char * exampleJson=
-        "{" 
-        "  \"astring\": \"This is a string\",\n"
-        "  \"number1\": 42,\n"
-        "  \"number2\":  -123.45,\n"
-        "  \"anObject\":{\"one\":1,\"two\":{\"obj2.1\":21,\"obj2.2\":22},\"three\":333},\n"
-        "  \"anArray\":[0, \"one\", {\"two.0\":20,\"two.1\":21}, 3, [4,44,444]],\n"
-        "  \"isnull\":null,\n"
-        "  \"test\": [ 0,1,2,3,4,\n"
-        "            {\"ZERO\":0, \"ONE\":1, \"TWO\":2, \"THREE\":3,\n"
-        "             \"TEST\":[0,\"one\",\"two\",1234]\n"
-        "            },\n"
-        "            6,7\n"
-        "          ],\n"
-        "  \"yes\": true,\n"
-        "  \"no\":  false\n"
-        "}\n";
-    char * exampleQuery="{'test' [5 {'TEST' [3";
-    int i, value;
-    printf("\n\nSimple Speed test...\nUsing this JSON:\n%s\n", exampleJson );
-    printf("we run this query: jRead_int( exampleJson, \"%s\", NULL)\n", exampleQuery );
-
-    printf("\nEnter no. of times to run query (default=100000): " );
-    gets( linebuf );
-    sscanf( linebuf, "%ld", &runs );
-
-    printf("Running %ld times... ", runs );
-
-    tStart= GetTickCount();
-    for( i=0; i<runs; i++ )
-    {
-        value= json_int( exampleJson, exampleQuery, NULL );
-        if( value != 1234 )
-            printf(" Big FAIL!" );
-    }
-    tEnd= GetTickCount();
-    elapsed= (double)(tEnd-tStart);
-    printf("\n...Done in %3.2lf secs (av. %3.2lf uS/query)\n\n", elapsed/1000.0, (elapsed*1000.0)/(double)runs );
-
-    printf("\n\nSpeed Comparisons:\n");
-    printf(" 3.4GHz i7 8-core=  770,000 queries/sec = 1.3uS per query = ~ 50nS per simple element\n");
-    printf(" 3.4GHz Pentium D=  245,000 queries/sec = 4.1uS per query = ~170nS per simple element\n");
-}
-
-//=================================================================
-//
-// 10,000 entry reading test
-// - compares jRead indexed query with jReadArrayStep()
-//
-void runLongJsonTest()
-{
-    struct FileBuffer json;
-    json_element_t arrayElement, objectElement;
-    char *filename= "TESTJSON.json";
-    char *query= "[*{'Users'";
-    int i;
-    char *pJsonArray;
-    DWORD tStart, tEnd;
-    double elapsed;
-    int *UserCounts;
-
-    if( readFileBuffer( filename, &json, FILE_BUFFER_MAXLEN ) == 0 )
-    {
-        printf("Can't open file: %s\n", filename );
-        return;
-    }
-    printf("\nLong JSON file test: read %s ok\n\n", filename );
-
-    // identify the whole JSON element
-
-    printf("Identifying the whole of the JSON 1000 times...");
-    tStart= GetTickCount();
-    for( i=0; i<1000; i++ )
-        json_read( (char *)json.data, "", &arrayElement );
-    tEnd= GetTickCount();
-    elapsed= (double)(tEnd-tStart);
-    printf("\n...Done in %3.2lf secs (av. %3.2lf mS per run)\n", elapsed/1000.0, elapsed/1000.0 );
-    printf("JSON is array of %d elements\n\n", arrayElement.elements );
-
-    // application wants "Users" values in this array
-    UserCounts= (int *)malloc( sizeof(int)*arrayElement.elements );
-
-
-    printf("Starting %d separate \"%s\"queries... ", arrayElement.elements, query );
-    tStart= GetTickCount();
-    // perform query on JSON file
-    // - access each array by indexing
-    //
-    for( i=0; i<arrayElement.elements; i++ )
-    {
-        UserCounts[i]= json_int( (char *)json.data, query, &i  );
-    }
-    tEnd= GetTickCount();
-    elapsed= (double)(tEnd-tStart);
-    printf("\n...Done in %3.2lf secs (av. %3.2lf mS/query)\n\n", elapsed/1000.0, elapsed/(double)arrayElement.elements );
-
-    //
-    // Now using jReadArrayStep()...
-    //
-
-    printf("Now using jReadArrayStep()...\n");
-    printf("Perform the %d-steps thru array 1000 times...", arrayElement.elements);
-    tStart= GetTickCount();
-    for( i=0; i<1000; i++ )
-    {
-        // identify the whole JSON element
-        if( arrayElement.data_type == JREAD_ARRAY )
-        {
-            int step;
-            pJsonArray= (char *)arrayElement.value;
-            for( step=0; step<arrayElement.elements; step++ )
-            {
-                pJsonArray= json_array_step(pJsonArray, &objectElement);
-                if( objectElement.data_type == JREAD_OBJECT )
-                {
-                    UserCounts[step]= json_int( (char *)objectElement.value, "{'Users'", NULL  );
-                }else
-                {
-                    printf("Array element wasn't an object!\n");
-                }
-            }
-        }
-    }
-    tEnd= GetTickCount();
-    elapsed= (double)(tEnd-tStart);
-    printf("\n...Done in %3.2lf secs (av. %3.2lf mS per %d elements read, %3.2lf uS/element)\n\n", 
-            elapsed/1000.0, elapsed/1000.0, arrayElement.elements,
-            elapsed/(double)arrayElement.elements);
-    printf("Done\n\n");
-
-    freeFileBuffer( &json );
-    return;
+    if (buffer->data != NULL)
+        free(buffer->data);
+    buffer->data = 0;
+    buffer->length = 0;
 }
 
 //====================================================================================
 // Functions for command-ine interface
 //
 
-void printHelp()
+void print_help()
 {
-    printf("jRead - an in-place JSON element reader\n");
+    printf("json - an in-place json element reader\n");
     printf("usage:\n");
-    printf("  jRead t        runs built-in test examples\n");
-    printf("  jRead s        simple speed test\n");
-    printf("  jRead l        run Long file test (using TESTJSON.json)\n");
-    printf("  jRead <jsonFileName> \"query String\"\n" );
+    printf("  json t        runs built-in test examples\n");
+    printf("  json <filename> \"query String\"\n" );
     printf("e.g.\n");
-    printf("  jRead jReadExample.json \"{'astring'\"\n");
+    printf("  json example.json \"{'astring'\"\n");
 };
 
 //-------------------------------------------------
 // Command-line interface
 // usage:
-//  jRead ?			prints help text
-//  jRead t			runs test examples
+//  JSON ?			prints help text
+//  JSON t			runs test examples
 //
-//	jRead jsonfile "query string"
+//	JSON jsonfile "query string"
 //  - reads jsonfile and executes "query string"
 //
 int main(int argc, char * argv[])
 {
-    struct FileBuffer json;
-
-    articleExample();	// look at this in debug
-
-    if( argc == 2 )
+    if(argc == 2)
     {
-        switch( *argv[1] )
+        switch(*argv[1])
         {
-        case '?':	printHelp(); break;
-        case 't':	runExamples(); break;
-        case 's':	runSpeedTest();	break;
-        case 'l':	runLongJsonTest(); break;
+        case '?':   print_help(); break;
+        case 't':   run_examples(); break;
         }
         return 0;
     }
 
-    if( argc != 3 )
+    if(argc != 3)
     {
-        printHelp();
+        print_help();
         return 1;
     };
 
-    if( readFileBuffer( argv[1], &json, FILE_BUFFER_MAXLEN ) == 0 )
+    file_buffer_t json;
+    if(file_buffer_read(argv[1], &json, FILE_BUFFER_MAXLEN) == 0)
     {
         printf("Can't open file: %s\n", argv[1] );
         return 1;
     }
 
     // perform query on JSON file
-    testQuery( (char *)json.data, argv[2] );
+    test_query((char*)json.data, argv[2]);
 
-    freeFileBuffer( &json );
+    file_buffer_free(&json);
     return 0;
 }
 

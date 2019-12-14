@@ -1,2 +1,2 @@
-json: main.c json.c
-	gcc main.c json.c -o json -Wall -std=c99
+json: main.c
+	gcc main.c -o json -Wall -std=c99
