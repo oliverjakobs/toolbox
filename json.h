@@ -27,9 +27,9 @@
 //  elem.value -> "one"
 //
 // or you could call the helper functions:
-//  json_string(json, "{'astring'", dest_string, MAXLEN);
+//  json_string(json, "{'astring'", dest_string, NULL);
 //  json_int(json, "{'anumber'", &myint);
-//  json_string(json, "{'myarray'[3", dest_string, MAXLEN);
+//  json_string(json, "{'myarray'[3", dest_string, NULL);
 //  etc.
 //
 // Note that the helper functions do type coersion and always return a value
@@ -72,10 +72,10 @@
 //      char* json_array_step(char* json_array, json_element_t* result);
 //
 // Helper functions:
-//      long    json_long(char* json, char* query);
-//      int     json_int(char* json, char* query);
-//      double  json_double(char* json, char* query);
-//      int     json_string(char* json, char* query, char* dest, int destlen);
+//      long    json_long(char* json, char* query, int* query_params);
+//      int     json_int(char* json, char* query, int* query_params);
+//      double  json_double(char* json, char* query, int* query_params);
+//      int     json_string(char* json, char* query, char* dest, int destlen, int* query_params);
 //
 // String output Functions
 //      char* json_type_to_string(int dataType);    // string describes dataType
@@ -215,7 +215,7 @@ char* json_array_step(char* json_array, json_element_t* result);
 long    json_long(char* json, char* query, int* query_params);
 int     json_int(char* json, char* query, int* query_params);
 double  json_double(char* json, char* query, int* query_params);
-int     json_string(char* json, char* query, char *dest, int dest_len, int* query_params);
+int     json_string(char* json, char* query, char *dest, int destlen, int* query_params);
 
 char* json_atoi(char* p, unsigned int* result); // string to unsigned int
 char* json_atol(char* p, long* result);         // string to signed long
@@ -733,7 +733,7 @@ double json_double(char* json, char* query, int* query_params)
 // returns: character length of string (excluding '\0' terminator)
 //
 // Note: any element can be returned as a string
-int json_string(char* json, char* query, char* dest, int dest_len, int* query_params)
+int json_string(char* json, char* query, char* dest, int destlen, int* query_params)
 {
     json_element_t element;
 
@@ -742,7 +742,7 @@ int json_string(char* json, char* query, char* dest, int dest_len, int* query_pa
     if (element.data_type == JSON_ERROR)
         return 0;
 
-    for (int i = 0; (i < element.bytelen) && (i < dest_len - 1); i++)
+    for (int i = 0; (i < element.bytelen) && (i < destlen - 1); i++)
         *dest++ = ((char*)element.value)[i];
     *dest = '\0';
     return element.bytelen;
