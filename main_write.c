@@ -75,7 +75,6 @@ void json_write_array_example()
     json_write_array_bool(&jwc, 1);
     json_write_array_null(&jwc);
     json_write_array_object(&jwc);
-    // empty object
     json_write_end(&jwc);
     json_write_array_object(&jwc);
         json_write_object_string(&jwc, "key", "value");
