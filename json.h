@@ -359,7 +359,6 @@ int _json_text_len(char* json)
     return len;
 }
 
-
 // json_count_object
 //  used when query ends at an object, we want to return the object length
 //  on entry json -> "{... "
@@ -430,7 +429,6 @@ char* _json_count_object(char* json, json_element_t* result, int key_index)
     }
     return json;
 }
-
 
 // json_count_array
 //  used when query ends at an array, we want to return the array length
@@ -675,7 +673,6 @@ char* json_array_step(char* json_array, json_element_t* result)
     result->data_type = JSON_ERROR;
     return json_array;
 }
-
 
 //--------------------------------------------------------------------
 // helper functions
