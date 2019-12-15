@@ -5,7 +5,7 @@
 //-------------------------------------------------
 // Command-line interface
 // usage:
-//  jWrite			prints example tests
+//  jWrite  prints example tests
 //
 
 void json_write_object_example()
