@@ -103,7 +103,7 @@ typedef enum
 
 typedef enum
 {
-    JSON_WRITE_OBJECT = 1,
+    JSON_WRITE_OBJECT,
     JSON_WRITE_ARRAY
 } json_write_node_type;
 

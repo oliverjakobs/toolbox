@@ -53,11 +53,11 @@
 //
 // allowing json_read to be called again on the array:
 // e.g.
-//  json_read(elem.value, "[3", &elem );    // get 4th element - the null value
+//  json_read(elem.value, "[3", &elem);    // get 4th element - the null value
 //
-//             -------------------------------------------------------
+// -------------------------------------------------------
 //
-// Note that jRead never modifies the source JSON and does not allocate any memory.
+// Note that this reader never modifies the source JSON and does not allocate any memory.
 // i.e. elements are returned as pointer and length into the source text.
 //
 // Functions
@@ -89,7 +89,7 @@
 //
 
 // uncomment this if you really want to use double quotes in query strings instead of '
-//#define JREAD_DOUBLE_QUOTE_IN_QUERY
+//#define JSON_DOUBLE_QUOTE_IN_QUERY
 
 #ifdef __cplusplus
 extern "C"
@@ -257,9 +257,9 @@ char* json_error_to_string(json_error error);   // string descibes error code
 // By default we use single quote in query strings so it's a lot easier
 // to type in code i.e.  "{'key'" instead of "{\"key\""
 #ifdef JSON_DOUBLE_QUOTE_IN_QUERY
-#define QUERY_QUOTE	'\"'
+#define JSON_QUERY_QUOTE    '\"'
 #else
-#define QUERY_QUOTE '\''
+#define JSON_QUERY_QUOTE    '\''
 #endif
 
 //--------------------------------------------------------------------
@@ -285,9 +285,9 @@ char* _json_find_token(char* sp, json_type* token_type)
     sp = _json_skip_whitespace(sp);
     c = *sp;
     if ( c == '\0' ) *token_type = JSON_EOL;
-    else if ((c == '"') || (c == QUERY_QUOTE))  *token_type = JSON_STRING;
-    else if ((c >= '0') && (c <= '9'))          *token_type = JSON_NUMBER;
-    else if ((c == 't') || (c == 'f'))          *token_type = JSON_BOOL;
+    else if ((c == '"') || (c == JSON_QUERY_QUOTE)) *token_type = JSON_STRING;
+    else if ((c >= '0') && (c <= '9'))              *token_type = JSON_NUMBER;
+    else if ((c == 't') || (c == 'f'))              *token_type = JSON_BOOL;
     else if (c == '-') *token_type = JSON_NUMBER;
     else if (c == '{') *token_type = JSON_OBJECT;
     else if (c == '[') *token_type = JSON_ARRAY;
@@ -541,7 +541,7 @@ char* json_read_param(char* json, char* query, json_element_t* result, int* quer
             return _json_count_object(json, result, index);
         }
 
-        query = _json_get_string(query, &element_q, QUERY_QUOTE); // element_q = query 'key'
+        query = _json_get_string(query, &element_q, JSON_QUERY_QUOTE); // element_q = query 'key'
 
         // read <key> : <value> , ... }
         // loop 'til key matched
