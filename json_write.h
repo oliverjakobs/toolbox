@@ -56,6 +56,13 @@ extern "C"
 {
 #endif
 
+// -----------------------------------------------------------------------------
+// ----| Version |--------------------------------------------------------------
+// -----------------------------------------------------------------------------
+
+#define JSON_WRITE_VERSION_MAJOR    1
+#define JSON_WRITE_VERSION_MINOR    0
+
 #define JSON_WRITE_STACK_DEPTH 32   // max nesting depth of objects/arrays
 
 typedef enum
