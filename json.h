@@ -266,7 +266,7 @@ char* json_error_to_string(json_error error);   // string descibes error code
 // Internal Functions
 //--------------------------------------------------------------------
 
-char* _json_skip_whitespace(char* sp)
+static char* _json_skip_whitespace(char* sp)
 {
     while ((*sp != '\0') && (*sp <= ' '))
         sp++;
@@ -279,7 +279,7 @@ char* _json_skip_whitespace(char* sp)
 // returns:
 //  pointer to start of next token or element
 //  type via token_type
-char* _json_find_token(char* sp, json_type* token_type)
+static char* _json_find_token(char* sp, json_type* token_type)
 {
     char c;
     sp = _json_skip_whitespace(sp);
@@ -310,7 +310,7 @@ char* _json_find_token(char* sp, json_type* token_type)
 // returns:
 //  pointer into json after the string (char after the " terminator)
 //   element contains pointer and length of string (or data_type = JSON_ERROR)
-char* _json_get_string(char* json, json_element_t* element, char quote)
+static char* _json_get_string(char* json, json_element_t* element, char quote)
 {
     short skip_ch;
     element->data_type = JSON_ERROR;
@@ -348,7 +348,7 @@ char* _json_get_string(char* json, json_element_t* element, char quote)
 //
 // returns:
 //  no. of chars from json upto a terminator
-int _json_text_len(char* json)
+static int _json_text_len(char* json)
 {
     int len = 0;
     while ((*json >  ' ') && (*json != ',') && (*json != '}') && (*json != ']'))
@@ -365,7 +365,7 @@ int _json_text_len(char* json)
 //  used to skip unwanted values which are objects
 //  keyIndex normally passed as -1 unless we're looking for the nth "key" value
 //  in which case keyIndex is the index of the key we want
-char* _json_count_object(char* json, json_element_t* result, int key_index)
+static char* _json_count_object(char* json, json_element_t* result, int key_index)
 {
     json_element_t element;
     json_type token;
@@ -434,7 +434,7 @@ char* _json_count_object(char* json, json_element_t* result, int key_index)
 //  used when query ends at an array, we want to return the array length
 //  on entry json -> "[... "
 //  used to skip unwanted values which are arrays
-char* _json_count_array(char* json, json_element_t* result)
+static char* _json_count_array(char* json, json_element_t* result)
 {
     json_type token;
     char* sp = _json_find_token(json + 1, &token); // check for empty array

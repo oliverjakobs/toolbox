@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#define JSON_WRITE_IMPLEMENTATION
 #include "json_write.h"
 
 //-------------------------------------------------
