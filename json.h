@@ -358,7 +358,7 @@ static char* _json_get_string(char* json, json_element_t* element, char quote)
 static int _json_text_len(char* json)
 {
     int len = 0;
-    while ((*json >  ' ') && (*json != ',') && (*json != '}') && (*json != ']'))
+    while ((*json > ' ') && (*json != ',') && (*json != '}') && (*json != ']'))
     {
         len++;
         json++;
@@ -432,7 +432,7 @@ static char* _json_count_object(char* json, json_element_t* result, int key_inde
     }
     else
     {
-        result->bytelen = json - (char*)result->value;
+        result->bytelen = (int)(json - (char*)result->value);
     }
     return json;
 }
@@ -476,7 +476,7 @@ static char* _json_count_array(char* json, json_element_t* result)
         }
     }
 
-    result->bytelen = json - (char*)result->value;
+    result->bytelen = (int)(json - (char*)result->value);
     return json;
 }
 
@@ -550,8 +550,7 @@ char* json_read_param(char* json, char* query, json_element_t* result, int* quer
 
         query = _json_get_string(query, &element_q, JSON_QUERY_QUOTE); // element_q = query 'key'
 
-        // read <key> : <value> , ... }
-        // loop 'til key matched
+        // read <key> : <value> , ... } loop until key matched
         while (1)
         {
             json = _json_get_string(++json, &element_j, '\"');
