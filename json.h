@@ -547,7 +547,6 @@ char* json_read_param(char* json, char* query, json_element_t* result, int* quer
             }
             return _json_count_object(json, result, index);
         }
-
         query = _json_get_string(query, &element_q, JSON_QUERY_QUOTE); // element_q = query 'key'
 
         // read <key> : <value> , ... } loop until key matched
@@ -587,7 +586,7 @@ char* json_read_param(char* json, char* query, json_element_t* result, int* quer
         }
         break;
     case JSON_ARRAY: // "[NUMBER" or "[*"
-        // read index, skip values 'til index
+        // read index, skip values until index
         if (token_q == JSON_EOL)
             return _json_count_array(json, result); // return length of object 
 
