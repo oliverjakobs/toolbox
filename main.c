@@ -82,13 +82,13 @@ void run_examples()
     // examples of helper functions
     long l = json_long(example_json, "{'number1'", NULL);       // 42
     int i = json_int(example_json, "{'yes'", NULL);             // 1    (BOOL example)
-    double d = json_double(example_json, "{'number2'", NULL);   // -123.45
+    float f = json_float(example_json, "{'number2'", NULL);   // -123.45
     json_string(example_json, "{'astring'", str, 16, NULL);     // "This is a strin\0" (buffer too short example)
 
     printf("Helper Functions...\n");
     printf("  \"number1\"= %ld\n", l);
     printf("  \"yes\"    = %d\n", i);
-    printf("  \"number2\"= %lf\n", d);
+    printf("  \"number2\"= %f\n", f);
     printf("  \"astring\"= \"%s\"\n", str);
 
     // Example of cascading queries

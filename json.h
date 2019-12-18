@@ -221,15 +221,17 @@ char* json_array_step(char* json_array, json_element_t* result);
 
 long    json_long(char* json, char* query, int* query_params);
 int     json_int(char* json, char* query, int* query_params);
-double  json_double(char* json, char* query, int* query_params);
+float   json_float(char* json, char* query, int* query_params);
 int     json_string(char* json, char* query, char *dest, int destlen, int* query_params);
 
 char* json_atoi(char* p, unsigned int* result); // string to unsigned int
 char* json_atol(char* p, long* result);         // string to signed long
-char* json_atof(char* p, double* result);       // string to double (does not do exponents)
+char* json_atof(char* p, float* result);        // string to float (does not do exponents)
 
 int json_strcmp(json_element_t* j1, json_element_t* j2); // compare STRING elements
 char* json_strcpy(char* dest_buffer, int dest_length, json_element_t* element); // copy element to '\0'-terminated buffer
+
+void json_print_element(json_element_t element);
 
 //--------------------------------------------------------------------
 // String output Functions
@@ -715,17 +717,17 @@ int json_int(char* json, char* query, int* query_params)
 }
 
 // json_double
-// - returns double from JSON
+// - returns float from JSON
 // - returns number from NUMBER or STRING elements
-//   otherwise returns 0.0
-double json_double(char* json, char* query, int* query_params)
+//   otherwise returns 0.0f
+float json_float(char* json, char* query, int* query_params)
 {
     json_element_t element;
     json_read_param(json, query, &element, query_params);
     if (element.data_type == JSON_ERROR)
-        return 0.0;
+        return 0.0f;
     
-    double result;
+    float result;
     json_atof((char*)element.value, &result);
     return result;
 }
@@ -788,17 +790,17 @@ char* json_atol(char* p, long* result)
 
 // read double from string
 // *CAUTION* does not handle exponents
-char* json_atof(char* p, double* result)
+char* json_atof(char* p, float* result)
 {
 #define VALID_DIGIT(c) ((c) >= '0' && (c) <= '9')
 
-    double sign, value;
+    float sign, value;
 
     // Get sign, if any.
-    sign = 1.0;
+    sign = 1.0f;
     if (*p == '-')
     {
-        sign = -1.0;
+        sign = -1.0f;
         p += 1;
 
     } 
@@ -808,24 +810,24 @@ char* json_atof(char* p, double* result)
     }
 
     // Get digits before decimal point or exponent, if any.
-    for (value = 0.0; VALID_DIGIT(*p); p += 1)
+    for (value = 0.0f; VALID_DIGIT(*p); p += 1)
     {
-        value = value * 10.0 + (*p - '0');
+        value = value * 10.0f + (float)(*p - '0');
     }
 
     // Get digits after decimal point, if any.
     if (*p == '.')
     {
-        double pow10 = 10.0;
+        float pow10 = 10.0f;
         p += 1;
         while (VALID_DIGIT(*p))
         {
-            value += (*p - '0') / pow10;
-            pow10 *= 10.0;
+            value += (float)(*p - '0') / pow10;
+            pow10 *= 10.0f;
             p += 1;
         }
     }
-    *result= sign * value;
+    *result = sign * value;
 
 #undef VALID_DIGIT
     return p;
@@ -865,6 +867,12 @@ char* json_strcpy(char* dest_buffer, int dest_length, json_element_t* element)
     }
     *dest= '\0';
     return dest_buffer;
+}
+
+// prints the value of an element
+void json_print_element(json_element_t element)
+{
+    printf("%.*s\n", element.bytelen, (char*)element.value);
 }
 
 //--------------------------------------------------------------------
