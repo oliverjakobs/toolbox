@@ -10,6 +10,8 @@ A collection of tools written in C99 (in single-header format)
 
 ## License
 
+## Documentation
+
 ### json
 
 ### json_write
