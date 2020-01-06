@@ -40,7 +40,7 @@
 //      object element =    "{'keyname'"
 //      array element =     "[INDEX"
 //
-// The json_read() function fills a json_element_t structure to describe the located element
+// The json_read() function fills a json_element structure to describe the located element
 // this can be used to locate any element, not just terminal values
 // e.g.
 //  json_read(json, "{'myarray'", &elem);
@@ -63,13 +63,13 @@
 // Functions
 // =========
 // Main JSON reader:
-//      int json_read(char* json_source, char* query, json_element_t* result);
+//      int json_read(char* json_source, char* query, json_element* result);
 //
 // Extended function using query parameters for indexing:
-//      int json_read_param(char* json_source, char* query, json_element_t* pResult, int* query_params);
+//      int json_read_param(char* json_source, char* query, json_element* pResult, int* query_params);
 //
 // Function to step thru JSON arrays instead of indexing:
-//      char* json_array_step(char* json_array, json_element_t* result);
+//      char* json_array_step(char* json_array, json_element* result);
 //
 // Helper functions:
 //      long    json_long(char* json, char* query, int* query_params);
@@ -101,7 +101,7 @@ extern "C"
 // -----------------------------------------------------------------------------
 
 #define JSON_VERSION_MAJOR    1
-#define JSON_VERSION_MINOR    0
+#define JSON_VERSION_MINOR    1
 
 //--------------------------------------------------------------------
 // enums
@@ -147,9 +147,9 @@ typedef enum
 } json_error;
 
 //--------------------------------------------------------------------
-// json_element_t
+// json_element
 // - structure to return JSON elements
-// - error = 0 for valid returns
+// - error = 0 (JSON_OK) for valid returns
 //
 // *NOTES*
 //    the returned value pointer points into the passed JSON
@@ -162,7 +162,7 @@ typedef struct
 	int bytelen;            // byte length of element (e.g. length of string, array text "[ ... ]" etc.)
 	void* value;            // pointer to value string in JSON text
 	json_error error;       // error value if data_type == JSON_ERROR
-} json_element_t;
+} json_element;
 
 //--------------------------------------------------------------------
 // JSON reader function
@@ -180,7 +180,7 @@ typedef struct
 //    json_read(json, "{'key'", &result);
 // returns with: 
 //    result.data_type = JREAD_STRING, result.value->'value', result.bytelen = 5
-char* json_read(char* json, char* query, json_element_t* result);
+char* json_read(char* json, char* query, json_element* result);
 
 // version of json_read which allows one or more queryParam integers to be substituted
 // for array or object indexes marked by a '*' in the query
@@ -190,7 +190,7 @@ char* json_read(char* json, char* query, json_element_t* result);
 // *!* CAUTION *!*
 // You can supply an array of integers which are indexed for each '*' in query
 // however, horrid things will happen if you don't supply enough parameters
-char* json_read_param(char* json, char* query, json_element_t* result, int* query_params);
+char* json_read_param(char* json, char* query, json_element* result, int* query_params);
 
 // Array Stepping function
 // assumes pJsonArray is JSON source of an array "[ ... ]"
@@ -205,7 +205,7 @@ char* json_read_param(char* json, char* query, json_element_t* result, int* quer
 //   if(theArray.data_type == JREAD_ARRAY)
 //   {
 //       char* array= (char*)theArray.value;
-//       json_element_t arrayElement;
+//       json_element arrayElement;
 //       int index;
 //       for(index = 0; index < theArray.elements; index++)
 //       {
@@ -213,7 +213,7 @@ char* json_read_param(char* json, char* query, json_element_t* result, int* quer
 //           ...
 //
 // Note: this significantly speeds up traversing arrays.
-char* json_array_step(char* json_array, json_element_t* result);
+char* json_array_step(char* json_array, json_element* result);
 
 //--------------------------------------------------------------------
 // Helper Functions
@@ -228,10 +228,10 @@ char* json_atoi(char* p, unsigned int* result); // string to unsigned int
 char* json_atol(char* p, long* result);         // string to signed long
 char* json_atof(char* p, float* result);        // string to float (does not do exponents)
 
-int json_strcmp(json_element_t* j1, json_element_t* j2); // compare STRING elements
-char* json_strcpy(char* dest_buffer, int dest_length, json_element_t* element); // copy element to '\0'-terminated buffer
+int json_strcmp(json_element* j1, json_element* j2); // compare STRING elements
+char* json_strcpy(char* dest_buffer, int dest_length, json_element* element); // copy element to '\0'-terminated buffer
 
-void json_print_element(json_element_t element);
+void json_print_element(json_element element);
 
 //--------------------------------------------------------------------
 // String output Functions
@@ -319,7 +319,7 @@ static char* _json_find_token(char* sp, json_type* token_type)
 // returns:
 //  pointer into json after the string (char after the " terminator)
 //   element contains pointer and length of string (or data_type = JSON_ERROR)
-static char* _json_get_string(char* json, json_element_t* element, char quote)
+static char* _json_get_string(char* json, json_element* element, char quote)
 {
     short skip_ch;
     element->data_type = JSON_ERROR;
@@ -374,9 +374,9 @@ static int _json_text_len(char* json)
 //  used to skip unwanted values which are objects
 //  keyIndex normally passed as -1 unless we're looking for the nth "key" value
 //  in which case keyIndex is the index of the key we want
-static char* _json_count_object(char* json, json_element_t* result, int key_index)
+static char* _json_count_object(char* json, json_element* result, int key_index)
 {
-    json_element_t element;
+    json_element element;
     json_type token;
     char* sp;
     result->data_type = JSON_OBJECT;
@@ -443,7 +443,7 @@ static char* _json_count_object(char* json, json_element_t* result, int key_inde
 //  used when query ends at an array, we want to return the array length
 //  on entry json -> "[... "
 //  used to skip unwanted values which are arrays
-static char* _json_count_array(char* json, json_element_t* result)
+static char* _json_count_array(char* json, json_element* result)
 {
     json_type token;
     char* sp = _json_find_token(json + 1, &token); // check for empty array
@@ -458,7 +458,7 @@ static char* _json_count_array(char* json, json_element_t* result)
     }
     else
     {
-        json_element_t element;
+        json_element element;
         while (1)
         {
             json = json_read(++json, "", &element); // array value
@@ -494,17 +494,17 @@ static char* _json_count_array(char* json, json_element_t* result)
 //  pointer into json
 //
 // Note: is recursive
-char* json_read(char* json, char* query, json_element_t* result)
+char* json_read(char* json, char* query, json_element* result)
 {
     return json_read_param(json, query, result, NULL);
 }
 
-char* json_read_param(char* json, char* query, json_element_t* result, int* query_params)
+char* json_read_param(char* json, char* query, json_element* result, int* query_params)
 {
     json_type token_q, token_j;
     int bytelen;
     unsigned int index, count;
-    json_element_t element_q, element_j;
+    json_element element_q, element_j;
 
     json = _json_find_token(json, &token_j);
     query = _json_find_token(query, &token_q);
@@ -661,7 +661,7 @@ char* json_read_param(char* json, char* query, json_element_t* result, int* quer
 // json_array_step
 //  reads one value from an array
 //  assumes pJsonArray points at the start of an array or array element
-char* json_array_step(char* json_array, json_element_t* result)
+char* json_array_step(char* json_array, json_element* result)
 {
     json_type token;
     json_array = _json_find_token(json_array, &token);
@@ -699,7 +699,7 @@ char* json_array_step(char* json_array, json_element_t* result)
 //   otherwise returns 0
 long json_long(char* json, char* query, int* query_params)
 {
-    json_element_t elem;
+    json_element elem;
     long result;
     json_read_param(json, query, &elem, query_params);
     if ((elem.data_type == JSON_ERROR) || (elem.data_type == JSON_NULL))
@@ -722,7 +722,7 @@ int json_int(char* json, char* query, int* query_params)
 //   otherwise returns 0.0f
 float json_float(char* json, char* query, int* query_params)
 {
-    json_element_t element;
+    json_element element;
     json_read_param(json, query, &element, query_params);
     if (element.data_type == JSON_ERROR)
         return 0.0f;
@@ -739,7 +739,7 @@ float json_float(char* json, char* query, int* query_params)
 // Note: any element can be returned as a string
 int json_string(char* json, char* query, char* dest, int destlen, int* query_params)
 {
-    json_element_t element;
+    json_element element;
 
     *dest = '\0';
     json_read_param(json, query, &element, query_params);
@@ -835,7 +835,7 @@ char* json_atof(char* p, float* result)
 
 // compare two json elements
 // returns: 0 if they are identical strings, else 1
-int json_strcmp(json_element_t* j1, json_element_t* j2)
+int json_strcmp(json_element* j1, json_element* j2)
 {
     int i;
     if ((j1->data_type != JSON_STRING) || 
@@ -853,7 +853,7 @@ int json_strcmp(json_element_t* j1, json_element_t* j2)
 // always copies element irrespective of data_type (unless it's an error)
 // dest_buffer is always '\0'-terminated (even on zero lenght returns)
 // returns pointer to dest_buffer
-char* json_strcpy(char* dest_buffer, int dest_length, json_element_t* element)
+char* json_strcpy(char* dest_buffer, int dest_length, json_element* element)
 {
     int len = element->bytelen;
     char* dest = dest_buffer;
@@ -870,7 +870,7 @@ char* json_strcpy(char* dest_buffer, int dest_length, json_element_t* element)
 }
 
 // prints the value of an element
-void json_print_element(json_element_t element)
+void json_print_element(json_element element)
 {
     printf("%.*s\n", element.bytelen, (char*)element.value);
 }

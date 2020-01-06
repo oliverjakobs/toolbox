@@ -8,7 +8,7 @@
 // to provide some error trapping to ensure that the result is valid JSON.
 //
 // Example:
-//  json_write_control_t jwc;
+//  json_write_control jwc;
 //
 //  json_write_open(&jwc, buffer, buflen, JW_OBJECT, 1);    // open root node as object
 //  json_write_obj_string(&jwc, "key", "value");
@@ -61,7 +61,7 @@ extern "C"
 // -----------------------------------------------------------------------------
 
 #define JSON_WRITE_VERSION_MAJOR    1
-#define JSON_WRITE_VERSION_MINOR    0
+#define JSON_WRITE_VERSION_MINOR    1
 
 #define JSON_WRITE_STACK_DEPTH 32   // max nesting depth of objects/arrays
 
@@ -94,7 +94,7 @@ typedef struct
 {
     json_write_node_type type;
     int element;
-} json_write_node_t;
+} json_write_node;
 
 typedef struct
 {
@@ -104,10 +104,10 @@ typedef struct
     char tmpbuf[32];        // local buffer for int/double convertions
     json_write_error error; // error code
     int call;               // call on which error occurred
-    json_write_node_t nodes[JSON_WRITE_STACK_DEPTH]; // stack of array/object nodes
+    json_write_node nodes[JSON_WRITE_STACK_DEPTH]; // stack of array/object nodes
     int stackpos;
     json_write_style style;
-} json_write_control_t;
+} json_write_control;
 
 
 // json_write_open
@@ -116,49 +116,49 @@ typedef struct
 // - json_write will not overrun the buffer (it returns an "output buffer full" error)
 // - rootType is the base JSON type: JSON_WRITE_OBJECT or JSON_WRITE_ARRAY
 // - style controls 'prettifying' the output: JSON_WRITE_PRETTY or JSON_WRITE_COMPACT
-void json_write_open(json_write_control_t* jwc, char* buffer, unsigned int buflen, json_write_node_type root_type, json_write_style style);
+void json_write_open(json_write_control* jwc, char* buffer, unsigned int buflen, json_write_node_type root_type, json_write_style style);
 
 // json_write_close
 // - closes the element opened by json_write_open()
 // - returns error code (if everything was fine: JSON_WRITE_OK)
 // - after an error, all following json_write calls are skipped internally
 //   so the error code is for the first error detected
-json_write_error json_write_close(json_write_control_t* jwc);
+json_write_error json_write_close(json_write_control* jwc);
 
 // Object insertion functions
 // - used to insert "key":"value" pairs into an object
-void json_write_object_string(json_write_control_t* jwc, char* key, char* value);
-void json_write_object_int(json_write_control_t* jwc, char* key, int value);
-void json_write_object_double(json_write_control_t* jwc, char* key, double value);
-void json_write_object_bool(json_write_control_t* jwc, char* key, int oneOrZero);
-void json_write_object_null(json_write_control_t* jwc, char* key);
-void json_write_object_object(json_write_control_t* jwc, char* key);
-void json_write_object_array(json_write_control_t* jwc, char* key);
+void json_write_object_string(json_write_control* jwc, char* key, char* value);
+void json_write_object_int(json_write_control* jwc, char* key, int value);
+void json_write_object_double(json_write_control* jwc, char* key, double value);
+void json_write_object_bool(json_write_control* jwc, char* key, int oneOrZero);
+void json_write_object_null(json_write_control* jwc, char* key);
+void json_write_object_object(json_write_control* jwc, char* key);
+void json_write_object_array(json_write_control* jwc, char* key);
 
 // Array insertion functions
 // - used to insert "value" elements into an array
-void json_write_array_string(json_write_control_t* jwc, char* value);
-void json_write_array_int(json_write_control_t* jwc, int value);
-void json_write_array_double(json_write_control_t* jwc, double value);
-void json_write_array_bool(json_write_control_t* jwc, int oneOrZero);
-void json_write_array_null(json_write_control_t* jwc);
-void json_write_array_object(json_write_control_t* jwc);
-void json_write_array_array(json_write_control_t* jwc);
+void json_write_array_string(json_write_control* jwc, char* value);
+void json_write_array_int(json_write_control* jwc, int value);
+void json_write_array_double(json_write_control* jwc, double value);
+void json_write_array_bool(json_write_control* jwc, int oneOrZero);
+void json_write_array_null(json_write_control* jwc);
+void json_write_array_object(json_write_control* jwc);
+void json_write_array_array(json_write_control* jwc);
 
 // json_write_end
 // - defines the end of an Object or Array definition
-json_write_error json_write_end(json_write_control_t* jwc);
+json_write_error json_write_end(json_write_control* jwc);
 
 // these 'raw' routines write the JSON value as the contents of rawtext
 // i.e. enclosing quotes are not added
 // - use if your app. supplies its own value->string functions
-void json_write_object_raw(json_write_control_t* jwc, char* key, char* rawtext);
-void json_write_array_raw(json_write_control_t* jwc, char* rawtext);
+void json_write_object_raw(json_write_control* jwc, char* key, char* rawtext);
+void json_write_array_raw(json_write_control* jwc, char* rawtext);
 
 // json_write_error_pos
 // - if json_write_close returned an error, this function returns the number of the jWrite function call
 //   which caused that error.
-int json_write_error_pos(json_write_control_t* jwc);
+int json_write_error_pos(json_write_control* jwc);
 
 // Returns '\0'-termianted string describing the error (as returned by json_write_close())
 char* json_write_error_string(json_write_error err);
@@ -197,7 +197,7 @@ static void _jw_modp_dtoa2(double value, char* str, int prec);
 
 //------------------------------------------
 // Internal functions
-static void _jw_put_ch(json_write_control_t* jwc, char c)
+static void _jw_put_ch(json_write_control* jwc, char c)
 {
     if ((unsigned int)(jwc->writepos - jwc->buffer) >= jwc->buflen)
     {
@@ -210,7 +210,7 @@ static void _jw_put_ch(json_write_control_t* jwc, char c)
 }
 
 // put string enclosed in quotes
-static void _jw_put_str(json_write_control_t* jwc, char* str)
+static void _jw_put_str(json_write_control* jwc, char* str)
 {
     _jw_put_ch(jwc, '\"');
 
@@ -221,13 +221,13 @@ static void _jw_put_str(json_write_control_t* jwc, char* str)
 }
 
 // put raw string
-static void _jw_put_raw(json_write_control_t* jwc, char* str)
+static void _jw_put_raw(json_write_control* jwc, char* str)
 {
     while (*str != '\0')
         _jw_put_ch(jwc, *str++);
 }
 
-static void _jw_pretty(json_write_control_t* jwc)
+static void _jw_pretty(json_write_control* jwc)
 {
     if (jwc->style == JSON_WRITE_PRETTY)
     {
@@ -238,7 +238,7 @@ static void _jw_pretty(json_write_control_t* jwc)
 }
 
 // Push / Pop node stack
-static void _jw_push(json_write_control_t* jwc, json_write_node_type node_type)
+static void _jw_push(json_write_control* jwc, json_write_node_type node_type)
 {
     if ((jwc->stackpos + 1) >= JSON_WRITE_STACK_DEPTH)
     {
@@ -251,7 +251,7 @@ static void _jw_push(json_write_control_t* jwc, json_write_node_type node_type)
     }
 }
 
-static json_write_node_type _jw_pop(json_write_control_t* jwc)
+static json_write_node_type _jw_pop(json_write_control* jwc)
 {
     json_write_node_type retval= jwc->nodes[jwc->stackpos].type;
     if (jwc->stackpos == 0)
@@ -266,7 +266,7 @@ static json_write_node_type _jw_pop(json_write_control_t* jwc)
 // - open writing of JSON starting with rootType = JW_OBJECT or JW_ARRAY
 // - initialise with user string buffer of length buflen
 // - isPretty=JW_PRETTY adds \n and spaces to prettify output (else JW_COMPACT)
-void json_write_open(json_write_control_t *jwc, char* buffer, unsigned int buflen, json_write_node_type root_type, json_write_style style)
+void json_write_open(json_write_control *jwc, char* buffer, unsigned int buflen, json_write_node_type root_type, json_write_style style)
 {
     memset(buffer, 0, buflen); // zap the whole destination buffer
     jwc->buffer = buffer;
@@ -285,7 +285,7 @@ void json_write_open(json_write_control_t *jwc, char* buffer, unsigned int bufle
 // json_write_close
 // - closes the root JSON object started by jwOpen()
 // - returns error code
-json_write_error json_write_close(json_write_control_t *jwc )
+json_write_error json_write_close(json_write_control *jwc )
 {
     if (jwc->error == JSON_WRITE_OK)
     {
@@ -307,7 +307,7 @@ json_write_error json_write_close(json_write_control_t *jwc )
 
 //------------------------------------------
 // End the current array/object
-json_write_error json_write_end(json_write_control_t* jwc)
+json_write_error json_write_end(json_write_control* jwc)
 {
     if (jwc->error == JSON_WRITE_OK)
     {
@@ -329,7 +329,7 @@ json_write_error json_write_end(json_write_control_t* jwc)
 // - checks current node is OBJECT
 // - adds comma if reqd
 // - adds "key" :
-json_write_error _json_write_object(json_write_control_t* jwc, char* key)
+json_write_error _json_write_object(json_write_control* jwc, char* key)
 {
     if (jwc->error == JSON_WRITE_OK)
     {
@@ -348,43 +348,43 @@ json_write_error _json_write_object(json_write_control_t* jwc, char* key)
 }
 
 // put raw string to object (i.e. contents of rawtext without quotes)
-void json_write_object_raw(json_write_control_t* jwc, char* key, char* rawtext)
+void json_write_object_raw(json_write_control* jwc, char* key, char* rawtext)
 {
     if (_json_write_object(jwc, key) == JSON_WRITE_OK)
         _jw_put_raw(jwc, rawtext);
 }
 
 // put "quoted" string to object
-void json_write_object_string(json_write_control_t* jwc, char* key, char* value)
+void json_write_object_string(json_write_control* jwc, char* key, char* value)
 {
     if (_json_write_object(jwc, key) == JSON_WRITE_OK)
         _jw_put_str(jwc, value);
 }
 
-void json_write_object_int(json_write_control_t* jwc, char* key, int value)
+void json_write_object_int(json_write_control* jwc, char* key, int value)
 {
     _jw_modp_itoa10(value, jwc->tmpbuf);
     json_write_object_raw(jwc, key, jwc->tmpbuf);
 }
 
-void json_write_object_double(json_write_control_t* jwc, char* key, double value)
+void json_write_object_double(json_write_control* jwc, char* key, double value)
 {
     _jw_modp_dtoa2(value, jwc->tmpbuf, 6);
     json_write_object_raw(jwc, key, jwc->tmpbuf);
 }
 
-void json_write_object_bool(json_write_control_t* jwc, char* key, int oneOrZero)
+void json_write_object_bool(json_write_control* jwc, char* key, int oneOrZero)
 {
     json_write_object_raw(jwc, key, (oneOrZero) ? "true" : "false");
 }
 
-void json_write_object_null(json_write_control_t* jwc, char* key)
+void json_write_object_null(json_write_control* jwc, char* key)
 {
     json_write_object_raw(jwc, key, "null");
 }
 
 // put Object in Object
-void json_write_object_object(json_write_control_t* jwc, char* key)
+void json_write_object_object(json_write_control* jwc, char* key)
 {
     if (_json_write_object(jwc, key) == JSON_WRITE_OK)
     {
@@ -394,7 +394,7 @@ void json_write_object_object(json_write_control_t* jwc, char* key)
 }
 
 // put Array in Object
-void json_write_object_array(json_write_control_t* jwc, char* key)
+void json_write_object_array(json_write_control* jwc, char* key)
 {
     if (_json_write_object(jwc, key) == JSON_WRITE_OK)
     {
@@ -411,7 +411,7 @@ void json_write_object_array(json_write_control_t* jwc, char* key)
 // - checks error
 // - checks current node is ARRAY
 // - adds comma if reqd
-json_write_error _json_write_array(json_write_control_t* jwc)
+json_write_error _json_write_array(json_write_control* jwc)
 {
     if (jwc->error == JSON_WRITE_OK)
     {
@@ -427,7 +427,7 @@ json_write_error _json_write_array(json_write_control_t* jwc)
 
 // put raw string to array (i.e. contents of rawtext without quotes)
 //
-void json_write_array_raw(json_write_control_t* jwc, char* rawtext)
+void json_write_array_raw(json_write_control* jwc, char* rawtext)
 {
     if (_json_write_array(jwc) == JSON_WRITE_OK)
         _jw_put_raw(jwc, rawtext);
@@ -435,35 +435,35 @@ void json_write_array_raw(json_write_control_t* jwc, char* rawtext)
 
 // put "quoted" string to array
 //
-void json_write_array_string(json_write_control_t* jwc, char* value)
+void json_write_array_string(json_write_control* jwc, char* value)
 {
     if (_json_write_array(jwc) == JSON_WRITE_OK)
         _jw_put_str(jwc, value);
 }
 
-void json_write_array_int(json_write_control_t* jwc, int value)
+void json_write_array_int(json_write_control* jwc, int value)
 {
     _jw_modp_itoa10(value, jwc->tmpbuf);
     json_write_array_raw(jwc, jwc->tmpbuf);
 }
 
-void json_write_array_double(json_write_control_t* jwc, double value)
+void json_write_array_double(json_write_control* jwc, double value)
 {
     _jw_modp_dtoa2(value, jwc->tmpbuf, 6);
     json_write_array_raw(jwc, jwc->tmpbuf);
 }
 
-void json_write_array_bool(json_write_control_t* jwc, int oneOrZero)
+void json_write_array_bool(json_write_control* jwc, int oneOrZero)
 {
     json_write_array_raw(jwc, (oneOrZero) ? "true" : "false");
 }
 
-void json_write_array_null(json_write_control_t* jwc)
+void json_write_array_null(json_write_control* jwc)
 {
     json_write_array_raw(jwc, "null");
 }
 
-void json_write_array_object(json_write_control_t* jwc)
+void json_write_array_object(json_write_control* jwc)
 {
     if (_json_write_array(jwc) == JSON_WRITE_OK)
     {
@@ -472,7 +472,7 @@ void json_write_array_object(json_write_control_t* jwc)
     }
 }
 
-void json_write_array_array(json_write_control_t* jwc)
+void json_write_array_array(json_write_control* jwc)
 {
     if (_json_write_array(jwc) == JSON_WRITE_OK)
     {
@@ -485,7 +485,7 @@ void json_write_array_array(json_write_control_t* jwc)
 // json_write_error_pos
 // - Returns position of error: the nth call to a JSON_WRITE function
 //
-int json_write_error_pos(json_write_control_t* jwc)
+int json_write_error_pos(json_write_control* jwc)
 {
     return jwc->call;
 }

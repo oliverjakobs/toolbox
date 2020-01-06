@@ -13,7 +13,7 @@ void json_write_object_example()
 {
     char buffer[1024];
     unsigned int buflen = 1024;
-    json_write_control_t jwc;
+    json_write_control jwc;
 
     printf("A JSON object example:\n\n" );
 
@@ -65,7 +65,7 @@ void json_write_array_example()
 {
     char buffer[1024];
     unsigned int buflen = 1024;
-    json_write_control_t jwc;
+    json_write_control jwc;
 
     printf("\n\nA JSON array example:\n\n" );
 
@@ -98,7 +98,7 @@ void json_write_error_example()
 {
     char buffer[1024];
     unsigned int buflen = 1024;
-    json_write_control_t jwc;
+    json_write_control jwc;
 
     printf("\n\nA JSON error example:\n\n" );
 
