@@ -1,10 +1,11 @@
 # Toolbox
 
-A collection of tools written in C99 (in single-header format) 
+A collection of single-header tools written in C99
 
-* **json**       - an in-place JSON element reader
-* **json_write** - a *really* simple JSON writer
-* **tiny_math**  - a small vector math library
+* **json**          - an in-place JSON element reader
+* **json_write**    - a *really* simple JSON writer
+* **file**          - utilities for files
+* **tiny_math**     - a small vector math library
 
 ## Usage
 
@@ -15,5 +16,7 @@ A collection of tools written in C99 (in single-header format)
 ### json
 
 ### json_write
+
+### file
 
 ### tiny_math

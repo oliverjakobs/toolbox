@@ -6,3 +6,6 @@ json_write: demo_json_write.c
 
 tiny_math: demo_math.c tiny_math.c
 	gcc demo_math.c tiny_math.c -o math -Wall -std=c99
+
+file: demo_file.c
+	gcc demo_file.c -o file -Wall -std=c99
