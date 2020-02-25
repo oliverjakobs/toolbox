@@ -38,6 +38,8 @@ limits malloc() to max_size bytes
 */
 int read_buffer(FILE* file, char** dataptr, size_t* sizeptr, size_t max_size);
 
+int write_file(FILE* file, char* data, size_t size);
+
 #ifdef __cplusplus
 }
 #endif
@@ -127,16 +129,16 @@ int read_buffer(FILE* file, char** dataptr, size_t* sizeptr, size_t max_size)
     char* data = NULL;
     size_t size = 0;
 
-    // find file size and allocate buffer for file
+    // find file size
     fseek(file, 0, SEEK_END);
     size = ftell(file);
+    rewind(file);
+
     if (size >= max_size)
     {
         return FILE_OVERFLOW;
     }
 
-    // rewind and read file
-    fseek(file, 0, SEEK_SET);
     data = (char*)malloc(size + 1);
     memset(data, 0, size + 1); // +1 guarantees trailing \0
 
@@ -148,6 +150,16 @@ int read_buffer(FILE* file, char** dataptr, size_t* sizeptr, size_t max_size)
     
     *dataptr = data;
     *sizeptr = size;
+
+    return FILE_OK;
+}
+
+int write_file(FILE* file, char* data, size_t size)
+{
+    if (fwrite(data, size, 1, file) != 1)
+    {
+        return FILE_ERROR;
+    }
 
     return FILE_OK;
 }

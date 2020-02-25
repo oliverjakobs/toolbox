@@ -2,61 +2,113 @@
 #define FILE_IMPLEMENTATION
 #include "file.h"
 
-#define FILE_BUFFER_MAX_SIZE    1024 * 1024
-#define FILE_CHUNK_SIZE         1024 * 256
+#define FILE_BUFFER_MAX_SIZE    10485761 // 10MB
+#define FILE_CHUNK_SIZE         10485761
+
+#include <time.h>
+
+double get_time_spent(clock_t begin, clock_t end)
+{
+    return (double)((end - begin) / CLOCKS_PER_SEC);
+}
 
 int main()
 {
-    char* filename = "README.md";
-    FILE* file;
+    char* filename_r = "10mb.txt";
+    char* filename_w = "write.txt";
+    FILE* file_r;
+    FILE* file_w;
 
-    if ((file = fopen(filename, "rb")) == NULL)
+    if ((file_r = fopen(filename_r, "rb")) == NULL)
     {
-        printf("Failed to open file: %s\n", filename);
+        printf("Failed to open file: %s\n", filename_r);
         return 1;
     }
-    
+
+    if ((file_w = fopen(filename_w, "wb")) == NULL)
+    {
+        printf("Failed to open file: %s\n", filename_w);
+        return 1;
+    }
+
     char* data;
     size_t size;
     int status = FILE_OK;
 
+    // clock
+    clock_t begin, end;
+
     // read_buffer
-    status = read_buffer(file, &data, &size, FILE_BUFFER_MAX_SIZE);
+    begin = clock();
+
+    status = read_buffer(file_r, &data, &size, FILE_BUFFER_MAX_SIZE);
     if(status != FILE_OK)
     {
-        printf("Failed to read file: %s\n", filename);
+        printf("Failed to read file: %s\n", filename_r);
+
+        free(data);
+        fclose(file_r);
+        fclose(file_w);
+
         return status;
     }
+
+    end = clock();
 
     printf("-----------------------------------\n");
     printf("read_buffer:\n");
     printf("-----------------------------------\n");
-    printf("size: %d bytes\n", size);
+    printf("Read %d bytes in %d ticks.\n", size, (end - begin));
     printf("-----------------------------------\n");
-    printf("%s", data);
-    printf("-----------------------------------\n");
-    printf("\n");
 
     // refresh
     free(data);
-    rewind(file);
+    rewind(file_r);
 
     // read_chunk
-    status = read_chunk(file, &data, &size, FILE_CHUNK_SIZE);
+    begin = clock();
+
+    status = read_chunk(file_r, &data, &size, FILE_CHUNK_SIZE);
     if (status != FILE_OK)
     {
-        printf("Failed to read file: %s\n", filename);
+        printf("Failed to read file: %s\n", filename_r);
+
+        free(data);
+        fclose(file_r);
+        fclose(file_w);
+
         return status;
     }
+
+    end = clock();
 
     printf("-----------------------------------\n");
     printf("read_chunk:\n");
     printf("-----------------------------------\n");
-    printf("size: %d bytes\n", size);
+    printf("Read %d bytes in %d ticks.\n", size, (end - begin));
     printf("-----------------------------------\n");
-    printf("%s", data);
-    printf("-----------------------------------\n");
-    printf("\n");
 
-    return 0;
+    fclose(file_r);
+
+    /*
+    // write
+    status = write_file(file_w, data, size);
+    if (status != FILE_OK)
+    {
+        printf("Failed to write to file: %s\n", filename_w);
+
+        free(data);
+        fclose(file_w);
+
+        return status;
+    }
+
+    printf("Successfully wrote to file: %s\n", filename_w);
+
+    */
+
+    fclose(file_w);
+    free(data);
+
+    return status;
 }
