@@ -1,6 +1,6 @@
 
-#define FILE_IMPLEMENTATION
-#include "file.h"
+#define TB_FILE_IMPLEMENTATION
+#include "tb_file.h"
 
 #define FILE_BUFFER_MAX_SIZE    10485761 // 10MB
 #define FILE_CHUNK_SIZE         10485761
@@ -33,7 +33,7 @@ int main()
 
     char* data;
     size_t size;
-    int status = FILE_OK;
+    int status = TB_FILE_OK;
 
     // clock
     clock_t begin, end;
@@ -41,8 +41,8 @@ int main()
     // read_buffer
     begin = clock();
 
-    status = read_buffer(file_r, &data, &size, FILE_BUFFER_MAX_SIZE);
-    if(status != FILE_OK)
+    status = tbf_read_buffer(file_r, &data, &size, FILE_BUFFER_MAX_SIZE);
+    if(status != TB_FILE_OK)
     {
         printf("Failed to read file: %s\n", filename_r);
 
@@ -68,8 +68,8 @@ int main()
     // read_chunk
     begin = clock();
 
-    status = read_chunk(file_r, &data, &size, FILE_CHUNK_SIZE);
-    if (status != FILE_OK)
+    status = tbf_read_chunk(file_r, &data, &size, FILE_CHUNK_SIZE);
+    if (status != TB_FILE_OK)
     {
         printf("Failed to read file: %s\n", filename_r);
 
@@ -92,8 +92,8 @@ int main()
 
     /*
     // write
-    status = write_file(file_w, data, size);
-    if (status != FILE_OK)
+    status = tbf_write(file_w, data, size);
+    if (status != TB_FILE_OK)
     {
         printf("Failed to write to file: %s\n", filename_w);
 

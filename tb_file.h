@@ -1,5 +1,5 @@
-#ifndef FILE_INCLUDE_H
-#define FILE_INCLUDE_H
+#ifndef TB_FILE_INCLUDE_H
+#define TB_FILE_INCLUDE_H
 
 #ifdef __cplusplus
 extern "C"
@@ -12,11 +12,14 @@ extern "C"
 #include <string.h>
 
 
-#define  FILE_OK         0  // Success
-#define  FILE_INVALID   -1  // Invalid parameters
-#define  FILE_ERROR     -2  // Stream error
-#define  FILE_OVERFLOW  -3  // Too much input
-#define  FILE_OOM       -4  // Out of memory
+#define TB_FILE_VERSION_MAJOR   0
+#define TB_FILE_VERSION_MINOR   6
+
+#define  TB_FILE_OK          0  // Success
+#define  TB_FILE_INVALID    -1  // Invalid parameters
+#define  TB_FILE_ERROR      -2  // Stream error
+#define  TB_FILE_OVERFLOW   -3  // Too much input
+#define  TB_FILE_OOM        -4  // Out of memory
 
 /*
 Read the input in chunks of size chunk_size, dynamically reallocating the 
@@ -30,31 +33,31 @@ If successful (return FILE_OK):
 
 Taken from: https://stackoverflow.com/a/44894946
 */
-int read_chunk(FILE* file, char** dataptr, size_t* sizeptr, size_t chunk_size);
+int tbf_read_chunk(FILE* file, char** dataptr, size_t* sizeptr, size_t chunk_size);
 
 /*
 reads file into a malloc'd buffer with appended '\0' terminator
 limits malloc() to max_size bytes
 */
-int read_buffer(FILE* file, char** dataptr, size_t* sizeptr, size_t max_size);
+int tbf_read_buffer(FILE* file, char** dataptr, size_t* sizeptr, size_t max_size);
 
-int write_file(FILE* file, char* data, size_t size);
+int tbf_write_file(FILE* file, char* data, size_t size);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // FILE_INCLUDE_H
+#endif // TB_FILE_INCLUDE_H
 
 // -----------------------------------------------------------------------------
 // ----| IMPLEMENTATION |-------------------------------------------------------
 // -----------------------------------------------------------------------------
 
-#ifdef FILE_IMPLEMENTATION
+#ifdef TB_FILE_IMPLEMENTATION
 
 // ----| read_chunk |-----------------------------------------------------------
 
-int read_chunk(FILE* file, char** dataptr, size_t* sizeptr, size_t chunk_size)
+int tbf_read_chunk(FILE* file, char** dataptr, size_t* sizeptr, size_t chunk_size)
 {
     char* data = NULL;
     char* temp;
@@ -64,11 +67,11 @@ int read_chunk(FILE* file, char** dataptr, size_t* sizeptr, size_t chunk_size)
 
     // None of the parameters can be NULL.
     if (file == NULL || dataptr == NULL || sizeptr == NULL)
-        return FILE_INVALID;
+        return TB_FILE_INVALID;
 
     // A read error already occurred?
     if (ferror(file))
-        return FILE_ERROR;
+        return TB_FILE_ERROR;
 
     while (1)
     {
@@ -81,14 +84,14 @@ int read_chunk(FILE* file, char** dataptr, size_t* sizeptr, size_t chunk_size)
             if (max_size <= size)
             {
                 free(data);
-                return FILE_OVERFLOW;
+                return TB_FILE_OVERFLOW;
             }
 
             temp = realloc(data, max_size);
             if (temp == NULL) 
             {
                 free(data);
-                return FILE_OOM;
+                return TB_FILE_OOM;
             }
             data = temp;
         }
@@ -103,14 +106,14 @@ int read_chunk(FILE* file, char** dataptr, size_t* sizeptr, size_t chunk_size)
     if (ferror(file)) 
     {
         free(data);
-        return FILE_ERROR;
+        return TB_FILE_ERROR;
     }
 
     temp = realloc(data, size + 1);
     if (temp == NULL) 
     {
         free(data);
-        return FILE_OOM;
+        return TB_FILE_OOM;
     }
 
     data = temp;
@@ -119,12 +122,12 @@ int read_chunk(FILE* file, char** dataptr, size_t* sizeptr, size_t chunk_size)
     *dataptr = data;
     *sizeptr = size;
 
-    return FILE_OK;
+    return TB_FILE_OK;
 }
 
 // ----| file_buffer |----------------------------------------------------------
 
-int read_buffer(FILE* file, char** dataptr, size_t* sizeptr, size_t max_size)
+int tbf_read_buffer(FILE* file, char** dataptr, size_t* sizeptr, size_t max_size)
 {
     char* data = NULL;
     size_t size = 0;
@@ -136,7 +139,7 @@ int read_buffer(FILE* file, char** dataptr, size_t* sizeptr, size_t max_size)
 
     if (size >= max_size)
     {
-        return FILE_OVERFLOW;
+        return TB_FILE_OVERFLOW;
     }
 
     data = (char*)malloc(size + 1);
@@ -145,32 +148,32 @@ int read_buffer(FILE* file, char** dataptr, size_t* sizeptr, size_t max_size)
     if (fread(data, size, 1, file) != 1)
     {
         free(data);
-        return FILE_ERROR;
+        return TB_FILE_ERROR;
     }
     
     *dataptr = data;
     *sizeptr = size;
 
-    return FILE_OK;
+    return TB_FILE_OK;
 }
 
-int write_file(FILE* file, char* data, size_t size)
+int tbf_write(FILE* file, char* data, size_t size)
 {
     if (fwrite(data, size, 1, file) != 1)
     {
-        return FILE_ERROR;
+        return TB_FILE_ERROR;
     }
 
-    return FILE_OK;
+    return TB_FILE_OK;
 }
 
-#endif // FILE_IMPLEMENTATION
+#endif // TB_FILE_IMPLEMENTATION
 
 /*
 ------------------------------------------------------------------------------
 This software is available under the MIT License.
 ------------------------------------------------------------------------------
-Copyright (c) 2019 Oliver Jakobs
+Copyright (c) 2020 Oliver Jakobs
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

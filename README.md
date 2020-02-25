@@ -2,21 +2,9 @@
 
 A collection of single-header tools written in C99
 
-* **json**          - an in-place JSON element reader
-* **json_write**    - a *really* simple JSON writer
-* **file**          - utilities for files
-* **tiny_math**     - a small vector math library
-
-## Usage
-
-## License
-
-## Documentation
-
-### json
-
-### json_write
-
-### file
-
-### tiny_math
+| library | description | latest version| language(s)
+|---------|-------------|---------------|-------------
+**[json](json.h)** | In-place JSON element reader | 1.1 | C
+**[json_write](json_write.h)** | *Really* simple JSON writer | 1.1 | C
+**[tb_file](tb_file.h)** | Utilities for files | 0.6 | C
+**[tiny_math](tiny_math.h)** | Small vector math library | 0.0 | C
