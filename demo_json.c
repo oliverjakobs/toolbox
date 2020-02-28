@@ -12,18 +12,18 @@
 #include <malloc.h>
 #include <string.h>
 
-#define JSON_IMPLEMENTATION
-#include "json.h"
+#define TB_JSON_IMPLEMENTATION
+#include "tb_json.h"
 
 //-------------------------------------------------
 // Do a query and print the results
 void test_query(char* json, char* query)
 {
-    json_element element;
-    json_read(json, query, &element);
+    tb_json_element element;
+    tb_json_read(json, query, &element);
     printf("Query: \"%s\"\n", query);
-    printf("return: %d = %s\n", element.error, json_error_to_string(element.error));
-    printf(" dataType = %s\n", json_type_to_string(element.data_type));
+    printf("return: %d = %s\n", element.error, tb_json_error_to_string(element.error));
+    printf(" dataType = %s\n", tb_json_type_to_string(element.data_type));
     printf(" elements = %d\n", element.elements);
     printf(" bytelen  = %d\n", element.bytelen);
     printf(" value    = %*.*s\n\n", element.bytelen, element.bytelen, element.value);
@@ -35,7 +35,7 @@ void test_query(char* json, char* query)
 void run_examples()
 {
     char str[128];
-    json_element array_element;
+    tb_json_element array_element;
 
     char* example_json=
         "{" 
@@ -80,10 +80,10 @@ void run_examples()
     test_query(example_json, "{999");
 
     // examples of helper functions
-    long l = json_long(example_json, "{'number1'", NULL);       // 42
-    int i = json_int(example_json, "{'yes'", NULL);             // 1    (BOOL example)
-    float f = json_float(example_json, "{'number2'", NULL);   // -123.45
-    json_string(example_json, "{'astring'", str, 16, NULL);     // "This is a strin\0" (buffer too short example)
+    long l =    tb_json_long(example_json, "{'number1'", NULL);     // 42
+    int i =     tb_json_int(example_json, "{'yes'", NULL);          // 1    (BOOL example)
+    float f =   tb_json_float(example_json, "{'number2'", NULL);    // -123.45
+    tb_json_string(example_json, "{'astring'", str, 16, NULL);     // "This is a strin\0" (buffer too short example)
 
     printf("Helper Functions...\n");
     printf("  \"number1\"= %ld\n", l);
@@ -95,21 +95,21 @@ void run_examples()
     printf("\nQueries on sub-elements and use of query parameters...\n");
 
     // locate "anArray"...
-    json_read(example_json, "{'anArray'", &array_element);
+    tb_json_read(example_json, "{'anArray'", &array_element);
     printf("  \"anArray\": = %*.*s\n\n", array_element.bytelen, array_element.bytelen, array_element.value);
 
     // do queries within "anArray"...
     for(i = 0; i < array_element.elements; i++)
     {
         // index the array using queryParam
-        json_string((char*)array_element.value, "[*", str, 128, &i); 
+        tb_json_string((char*)array_element.value, "[*", str, 128, &i); 
         printf("  anArray[%d] = %s\n", i, str);
     }
 
     // example using a parameter array
     {
         int params[2] = { 2, 1 };
-        json_string((char*)array_element.value, "[*{*", str, 128, params);
+        tb_json_string((char*)array_element.value, "[*{*", str, 128, params);
         printf("\n  anArray[%d] objectKey[%d] = \"%s\"\n", params[0], params[1], str);
     }
 }
