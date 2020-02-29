@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "tiny_math.h"
+#include "tb_math.h"
 
 void print_vec2(vec2 v)
 {

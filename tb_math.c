@@ -1,4 +1,4 @@
-#include "tiny_math.h"
+#include "tb_math.h"
 
 #include <math.h>
 
