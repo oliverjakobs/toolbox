@@ -2,8 +2,8 @@
 
 A collection of tools and utilities written in C99
 
-| library | description | latest version| language(s)
-|---------|-------------|---------------|-------------
+| library | description 
+|---------|-------------------------------------------------
 **[toolbox](toolbox.h)** | min, max and swap utilities 
 **[tb_json](tb_json.h)** | In-place JSON element reader 
 **[tb_jwrite](tb_jwrite.h)** | *Really* simple JSON writer 
