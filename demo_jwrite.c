@@ -1,6 +1,5 @@
 #include <stdio.h>
 
-#define TB_JWRITE_IMPLEMENTATION
 #include "tb_jwrite.h"
 
 //-------------------------------------------------
@@ -102,23 +101,23 @@ void tb_jwrite_error_example()
 
     printf("\n\nA JSON error example:\n\n" );
 
-    tb_jwrite_open(&jwc, buffer, buflen, TB_JWRITE_ARRAY, 1); // 1
-    tb_jwrite_array_string(&jwc, "String value");              // 2
-    tb_jwrite_array_int(&jwc, 1234);                           // 3
-    tb_jwrite_array_double(&jwc, 567.89012);                   // 4
-    tb_jwrite_array_bool(&jwc, 1);                             // 5
-    tb_jwrite_array_null(&jwc);                                // 6
-    tb_jwrite_array_object(&jwc);                              // 7
-    tb_jwrite_array_object(&jwc);                              // 8  <-- this is where the error is
-        tb_jwrite_object_string(&jwc, "key", "value");         // 9
-        tb_jwrite_object_string(&jwc, "key2", "value2");       // 10
-    tb_jwrite_end(&jwc);                                       // 11 
-    tb_jwrite_array_array(&jwc);    // array in array          // 12
-        tb_jwrite_array_string(&jwc, "Array in array");        // 13
-        tb_jwrite_array_string(&jwc, "the end");               // 14
-    tb_jwrite_end(&jwc);                                       // 15
+    tb_jwrite_open(&jwc, buffer, buflen, TB_JWRITE_ARRAY, 1);   // 1
+    tb_jwrite_array_string(&jwc, "String value");               // 2
+    tb_jwrite_array_int(&jwc, 1234);                            // 3
+    tb_jwrite_array_double(&jwc, 567.89012);                    // 4
+    tb_jwrite_array_bool(&jwc, 1);                              // 5
+    tb_jwrite_array_null(&jwc);                                 // 6
+    tb_jwrite_array_object(&jwc);                               // 7
+    tb_jwrite_array_object(&jwc);                               // 8  <-- this is where the error is
+        tb_jwrite_object_string(&jwc, "key", "value");          // 9
+        tb_jwrite_object_string(&jwc, "key2", "value2");        // 10
+    tb_jwrite_end(&jwc);                                        // 11 
+    tb_jwrite_array_array(&jwc);    // array in array           // 12
+        tb_jwrite_array_string(&jwc, "Array in array");         // 13
+        tb_jwrite_array_string(&jwc, "the end");                // 14
+    tb_jwrite_end(&jwc);                                        // 15
 
-    tb_jwrite_error err = tb_jwrite_close(&jwc);              // 16
+    tb_jwrite_error err = tb_jwrite_close(&jwc);                // 16
 
     printf(buffer);
 

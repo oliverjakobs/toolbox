@@ -1,9 +1,4 @@
-// main.c
-//
-// Test harness command-line for JSON 
-//
-//
-#define _CRT_SECURE_NO_WARNINGS			// stop complaining about unsafe functions
+#include "tb_json.h"
 
 #include <windows.h>
 
@@ -12,15 +7,13 @@
 #include <malloc.h>
 #include <string.h>
 
-#define TB_JSON_IMPLEMENTATION
-#include "tb_json.h"
 
 //-------------------------------------------------
 // Do a query and print the results
 void test_query(char* json, char* query)
 {
     tb_json_element element;
-    tb_json_read(json, query, &element);
+    tb_json_read(json, &element, query);
     printf("Query: \"%s\"\n", query);
     printf("return: %d = %s\n", element.error, tb_json_error_to_string(element.error));
     printf(" dataType = %s\n", tb_json_type_to_string(element.data_type));
@@ -80,9 +73,9 @@ void run_examples()
     test_query(example_json, "{999");
 
     // examples of helper functions
-    long l =    tb_json_long(example_json, "{'number1'", NULL);     // 42
-    int i =     tb_json_int(example_json, "{'yes'", NULL);          // 1    (BOOL example)
-    float f =   tb_json_float(example_json, "{'number2'", NULL);    // -123.45
+    long l =    tb_json_long(example_json, "{'number1'", NULL, 0);     // 42
+    int i =     tb_json_int(example_json, "{'yes'", NULL, 0);          // 1    (BOOL example)
+    float f =   tb_json_float(example_json, "{'number2'", NULL, 0.0f);    // -123.45
     tb_json_string(example_json, "{'astring'", str, 16, NULL);     // "This is a strin\0" (buffer too short example)
 
     printf("Helper Functions...\n");
@@ -95,7 +88,7 @@ void run_examples()
     printf("\nQueries on sub-elements and use of query parameters...\n");
 
     // locate "anArray"...
-    tb_json_read(example_json, "{'anArray'", &array_element);
+    tb_json_read(example_json, &array_element, "{'anArray'");
     printf("  \"anArray\": = %*.*s\n\n", array_element.bytelen, array_element.bytelen, array_element.value);
 
     // do queries within "anArray"...

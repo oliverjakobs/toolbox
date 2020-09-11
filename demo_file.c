@@ -1,5 +1,3 @@
-
-#define TB_FILE_IMPLEMENTATION
 #include "tb_file.h"
 
 #define FILE_BUFFER_MAX_SIZE    10485761 // 10MB
@@ -41,7 +39,7 @@ int main()
     // read_buffer
     begin = clock();
 
-    status = tbf_read_buffer(file_r, &data, &size, FILE_BUFFER_MAX_SIZE);
+    status = tb_file_read_buffer(file_r, &data, &size, FILE_BUFFER_MAX_SIZE);
     if(status != TB_FILE_OK)
     {
         printf("Failed to read file: %s\n", filename_r);
@@ -68,7 +66,7 @@ int main()
     // read_chunk
     begin = clock();
 
-    status = tbf_read_chunk(file_r, &data, &size, FILE_CHUNK_SIZE);
+    status = tb_file_read_chunk(file_r, &data, &size, FILE_CHUNK_SIZE);
     if (status != TB_FILE_OK)
     {
         printf("Failed to read file: %s\n", filename_r);

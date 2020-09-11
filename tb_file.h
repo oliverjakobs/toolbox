@@ -1,5 +1,5 @@
-#ifndef TB_FILE_INCLUDE_H
-#define TB_FILE_INCLUDE_H
+#ifndef TB_FILE_H
+#define TB_FILE_H
 
 #ifdef __cplusplus
 extern "C"
@@ -8,166 +8,45 @@ extern "C"
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <errno.h>
 #include <string.h>
 
-
-#define TB_FILE_VERSION_MAJOR   0
-#define TB_FILE_VERSION_MINOR   6
-
-#define  TB_FILE_OK          0  // Success
-#define  TB_FILE_INVALID    -1  // Invalid parameters
-#define  TB_FILE_ERROR      -2  // Stream error
-#define  TB_FILE_OVERFLOW   -3  // Too much input
-#define  TB_FILE_OOM        -4  // Out of memory
-
-/*
-Read the input in chunks of size chunk_size, dynamically reallocating the 
-buffer as needed. Only using realloc(), fread(), ferror(), and free()
-
-If successful (return FILE_OK):
-    (*dataptr) points to a dynamically allocated buffer, with
-    (*sizeptr) bytes read from the file.
-    The buffer is allocated for one extra char, which is '\0',
-    and automatically appended after the data.
-
-Taken from: https://stackoverflow.com/a/44894946
-*/
-int tbf_read_chunk(FILE* file, char** dataptr, size_t* sizeptr, size_t chunk_size);
+/* ----------------------| ERROR_CODES |--------------------------- */
+typedef enum
+{
+    TB_FILE_OK = 0,     /* Success */
+    TB_FILE_INVALID,    /* Invalid parameters */
+    TB_FILE_ERROR,      /* Stream error */
+    TB_FILE_OVERFLOW,   /* Too much input */
+    TB_FILE_OOM         /* Out of memory */
+} tb_file_error;
 
 /*
-reads file into a malloc'd buffer with appended '\0' terminator
-limits malloc() to max_size bytes
-*/
-int tbf_read_buffer(FILE* file, char** dataptr, size_t* sizeptr, size_t max_size);
+ * Read the input in chunks of size chunk_size, dynamically reallocating the 
+ * buffer as needed. Only using realloc(), fread(), ferror(), and free()
+ *
+ * If successful (return FILE_OK):
+ *  (*dataptr) points to a dynamically allocated buffer, with
+ *  (*sizeptr) bytes read from the file.
+ *  The buffer is allocated for one extra char, which is '\0',
+ *  and automatically appended after the data.
+ *
+ * Taken from: https://stackoverflow.com/a/44894946
+ */
+tb_file_error tb_file_read_chunk(FILE* file, char** dataptr, size_t* sizeptr, size_t chunk_size);
 
-int tbf_write_file(FILE* file, char* data, size_t size);
+/*
+ * reads file into a malloc'd buffer with appended '\0' terminator
+ * limits malloc() to max_size bytes
+ */
+tb_file_error tb_file_read_buffer(FILE* file, char** dataptr, size_t* sizeptr, size_t max_size);
+
+tb_file_error tb_file_write(FILE* file, char* data, size_t size);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // TB_FILE_INCLUDE_H
-
-// -----------------------------------------------------------------------------
-// ----| IMPLEMENTATION |-------------------------------------------------------
-// -----------------------------------------------------------------------------
-
-#ifdef TB_FILE_IMPLEMENTATION
-
-// ----| read_chunk |-----------------------------------------------------------
-
-int tbf_read_chunk(FILE* file, char** dataptr, size_t* sizeptr, size_t chunk_size)
-{
-    char* data = NULL;
-    char* temp;
-
-    size_t max_size = 0;
-    size_t size = 0;
-
-    // None of the parameters can be NULL.
-    if (file == NULL || dataptr == NULL || sizeptr == NULL)
-        return TB_FILE_INVALID;
-
-    // A read error already occurred?
-    if (ferror(file))
-        return TB_FILE_ERROR;
-
-    while (1)
-    {
-        if (size + chunk_size + 1 > max_size) 
-        {
-            max_size = size + chunk_size + 1;
-
-            // Overflow check. Some ANSI C compilers
-            // may optimize this away, though.
-            if (max_size <= size)
-            {
-                free(data);
-                return TB_FILE_OVERFLOW;
-            }
-
-            temp = realloc(data, max_size);
-            if (temp == NULL) 
-            {
-                free(data);
-                return TB_FILE_OOM;
-            }
-            data = temp;
-        }
-
-        size_t elem = fread(data + size, 1, chunk_size, file);
-        if (elem == 0)
-            break;
-
-        size += elem;
-    }
-
-    if (ferror(file)) 
-    {
-        free(data);
-        return TB_FILE_ERROR;
-    }
-
-    temp = realloc(data, size + 1);
-    if (temp == NULL) 
-    {
-        free(data);
-        return TB_FILE_OOM;
-    }
-
-    data = temp;
-    data[size] = '\0';
-
-    *dataptr = data;
-    *sizeptr = size;
-
-    return TB_FILE_OK;
-}
-
-// ----| file_buffer |----------------------------------------------------------
-
-int tbf_read_buffer(FILE* file, char** dataptr, size_t* sizeptr, size_t max_size)
-{
-    char* data = NULL;
-    size_t size = 0;
-
-    // find file size
-    fseek(file, 0, SEEK_END);
-    size = ftell(file);
-    rewind(file);
-
-    if (size >= max_size)
-    {
-        return TB_FILE_OVERFLOW;
-    }
-
-    data = (char*)malloc(size + 1);
-    memset(data, 0, size + 1); // +1 guarantees trailing \0
-
-    if (fread(data, size, 1, file) != 1)
-    {
-        free(data);
-        return TB_FILE_ERROR;
-    }
-    
-    *dataptr = data;
-    *sizeptr = size;
-
-    return TB_FILE_OK;
-}
-
-int tbf_write(FILE* file, char* data, size_t size)
-{
-    if (fwrite(data, size, 1, file) != 1)
-    {
-        return TB_FILE_ERROR;
-    }
-
-    return TB_FILE_OK;
-}
-
-#endif // TB_FILE_IMPLEMENTATION
+#endif /* !TB_FILE_INCLUDE_H */
 
 /*
 ------------------------------------------------------------------------------
