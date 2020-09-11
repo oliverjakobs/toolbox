@@ -1,3 +1,8 @@
+/*
+tb_jwrite v0.6 - Utilities for files
+-----------------------------------------------------------------------------------------
+*/
+
 #ifndef TB_FILE_H
 #define TB_FILE_H
 
@@ -10,7 +15,7 @@ extern "C"
 #include <stdio.h>
 #include <string.h>
 
-/* ----------------------| ERROR_CODES |--------------------------- */
+/* ----------------------| error codes |-------------------------- */
 typedef enum
 {
     TB_FILE_OK = 0,     /* Success */
@@ -29,8 +34,6 @@ typedef enum
  *  (*sizeptr) bytes read from the file.
  *  The buffer is allocated for one extra char, which is '\0',
  *  and automatically appended after the data.
- *
- * Taken from: https://stackoverflow.com/a/44894946
  */
 tb_file_error tb_file_read_chunk(FILE* file, char** dataptr, size_t* sizeptr, size_t chunk_size);
 

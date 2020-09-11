@@ -1,0 +1,38 @@
+{
+    "key": "value",
+    "int": 1,
+    "i2": 154.65,
+    "i3": 1.562,
+    "i4": 0,
+    "i5": 2896.6,
+    "i6": -8.546,
+    "i7": 23.5,
+    "i8": 444444.438,
+    "i9": 52.6,
+    "i10": -98451,
+    "float": 1.234,
+    "nullThing": null,
+    "EmptyArray": [],
+    "anArray": [
+        "array one",
+        2,
+        1234.567,
+        null,
+        0,
+        {
+            "obj3_one": "one",
+            "obj3_two": "two"
+        },
+        [
+            0,
+            1,
+            2
+        ]
+    ],
+    "EmptyObject": {},
+    "anObject": {
+        "msg": "object in object",
+        "msg2": "object in object 2nd entry"
+    },
+    "ObjEntry": "This is the last one"
+}
