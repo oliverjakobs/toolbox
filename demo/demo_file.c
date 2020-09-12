@@ -1,4 +1,4 @@
-#include "tb_file.h"
+#include "../tb_file.h"
 
 #define FILE_BUFFER_MAX_SIZE    10485761 // 10MB
 #define FILE_CHUNK_SIZE         10485761
@@ -12,8 +12,8 @@ double get_time_spent(clock_t begin, clock_t end)
 
 int main()
 {
-    char* filename_r = "10mb.txt";
-    char* filename_w = "write.txt";
+    char* filename_r = "res/10mb.txt";
+    char* filename_w = "res/write.txt";
     FILE* file_r;
     FILE* file_w;
 

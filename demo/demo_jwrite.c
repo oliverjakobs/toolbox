@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "tb_jwrite.h"
+#include "../tb_jwrite.h"
 
 void tb_jwrite_object_example(const char* path)
 {
@@ -120,9 +120,9 @@ int main(int argc, char* argv[])
 {
     printf("---| tb_jwrite |---\n\n");
 
-    tb_jwrite_object_example("jwrite_object.json");
-    tb_jwrite_array_example("jwrite_array.json");
-    tb_jwrite_error_example("jwrite_error.json");
+    tb_jwrite_object_example("res/jwrite_object.json");
+    tb_jwrite_array_example("res/jwrite_array.json");
+    tb_jwrite_error_example("res/jwrite_error.json");
 
     return 0;
 }
