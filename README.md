@@ -12,3 +12,4 @@ A collection of tools and utilities written in C99.
 **[tb_array](tb_array.h)** | Simple array implementation | 0.0 
 **[tb_hashmap](tb_hashmap.h)** | Simple hashmap implementation | 0.0 
 **[tb_map](tb_map.h)** | Simple map implementation based on AVL-Trees. | 0.9 
+**[tb_bits](tb_bits.h)** | Utilities to manipulate bits. | 0.5 
