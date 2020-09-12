@@ -13,6 +13,8 @@ file: demo/demo_file.c tb_file.c
 # array
 
 # list
+list: demo/demo_list.c tb_list.c
+	gcc demo/demo_list.c tb_list.c -o list -Wall -std=c99
 
 # hashmap
 
