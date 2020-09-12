@@ -1,6 +1,6 @@
 # Toolbox
 
-A collection of tools and utilities written in C99
+A collection of tools and utilities written in C99.
 
 | library | description | version
 |---------|-------------|---------------
