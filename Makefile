@@ -20,3 +20,6 @@ list: demo/demo_list.c tb_list.c
 
 # map
 
+# bits
+bits: demo/demo_bits.c tb_bits.c
+	gcc demo/demo_bits.c tb_bits.c -o bits -Wall -std=c99

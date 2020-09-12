@@ -2,11 +2,12 @@
 
 #include <stdlib.h>
 
+#include <stdint.h>
 
 /* ----------------------------| map entry |------------------------------------------- */
 struct tb_map_entry
 {
-    uint32_t key;
+    void* key;
     void* value;
     tb_map_entry* parent;
     tb_map_entry* left;
@@ -15,14 +16,14 @@ struct tb_map_entry
 };
 
 /* Allocates a new map entry. */
-static tb_map_entry* tb_map_entry_alloc(const tb_map* map, uint32_t key, void* value, tb_map_entry* parent)
+static tb_map_entry* tb_map_entry_alloc(const tb_map* map, const void* key, void* value, tb_map_entry* parent)
 {
     tb_map_entry* entry = malloc(sizeof(tb_map_entry));
 
     if (entry)
     {
-        entry->key = key;
-        entry->value = map->alloc_func ? map->alloc_func(value) : value;
+        entry->key = map->key_alloc ? map->key_alloc(key) : key;
+        entry->value = map->value_alloc ? map->value_alloc(value) : value;
         entry->parent = parent;
         entry->left = NULL;
         entry->right = NULL;
@@ -37,15 +38,19 @@ static void tb_map_entry_free(const tb_map* map, tb_map_entry* entry)
 {
     if (!entry) return;
 
-    if (map->free_func)
-        map->free_func(entry->value);
+    if (map->key_free)
+        map->key_free(entry->key);
+
+    if (map->value_free)
+        map->value_free(entry->value);
+
     free(entry);
 }
 
 /* Default compare function. */
-static int tb_map_entry_cmp(uint32_t left, uint32_t right)
+static int tb_map_entry_cmp(const void* left, const void* right)
 {
-    return left - right;
+    return *(uint32_t*)left - *(uint32_t*)right;
 }
 
 /* ----------------------------| AVL-Tree functions |---------------------------------- */
@@ -194,12 +199,14 @@ static tb_map_entry* tb_map_avl_rebalance(tb_map_entry* node)
 static void tb_map_reset(tb_map* map)
 {
     map->root = NULL;
-    map->alloc_func = NULL;
-    map->free_func = NULL;
     map->cmp_func = NULL;
+    map->key_alloc = NULL;
+    map->key_free = NULL;
+    map->value_alloc = NULL;
+    map->value_free = NULL;
 }
 
-tb_map_error tb_map_alloc(tb_map* map, int(*cmp_func)(uint32_t,uint32_t))
+tb_map_error tb_map_alloc(tb_map* map, int(*cmp_func)(const void*,const void*))
 {
     tb_map_reset(map);
 
@@ -214,10 +221,16 @@ void tb_map_free(tb_map* map)
     tb_map_reset(map);
 }
 
-void tb_map_set_mem_funcs(tb_map* map, void* (*alloc_func)(const void*), void (*free_func)(void*))
+void tb_map_set_key_alloc_funcs(tb_map* map, void* (*alloc_func)(const void*), void (*free_func)(void*))
 {
-    map->alloc_func = alloc_func;
-    map->free_func = free_func;
+    map->key_alloc = alloc_func;
+    map->key_free = free_func;
+}
+
+void tb_map_set_value_alloc_funcs(tb_map* map, void* (*alloc_func)(const void*), void (*free_func)(void*))
+{
+    map->value_alloc = alloc_func;
+    map->value_free = free_func;
 }
 
 void tb_map_clear(tb_map* map)
@@ -235,7 +248,7 @@ void tb_map_clear(tb_map* map)
     map->root = NULL;
 }
 
-tb_map_error tb_map_insert(tb_map* map, uint32_t key, void* value)
+tb_map_error tb_map_insert(tb_map* map, const void* key, void* value)
 {
     tb_map_entry* node = NULL;
     tb_map_entry* temp = map->root;
@@ -276,7 +289,7 @@ tb_map_error tb_map_insert(tb_map* map, uint32_t key, void* value)
     return TB_MAP_OK;
 }
 
-tb_map_error tb_map_remove(tb_map* map, uint32_t key)
+tb_map_error tb_map_remove(tb_map* map, const void* key)
 {
     tb_map_entry* node = map->root;
 
@@ -352,7 +365,7 @@ tb_map_error tb_map_remove(tb_map* map, uint32_t key)
     return TB_MAP_OK;
 }
  
-void* tb_map_find(const tb_map* map, uint32_t key)
+void* tb_map_find(const tb_map* map, const void* key)
 {
     const tb_map_entry* node = map->root;
     while (node && map->cmp_func(key, node->key) != 0)
@@ -384,7 +397,7 @@ tb_map_iter* tb_map_iter_remove(tb_map* map, const tb_map_iter* iter)
     return (tb_map_iter*)next;
 }
 
-uint32_t tb_map_iter_get_key(const tb_map_iter* iter)
+const void* tb_map_iter_get_key(const tb_map_iter* iter)
 {
     return iter ? ((tb_map_entry*)iter)->key : -1;
 }

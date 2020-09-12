@@ -1,7 +1,6 @@
 #ifndef TB_MAP_H
 #define TB_MAP_H
 
-#include <stdint.h>
 
 struct tb_map_iter;
 typedef struct tb_map_iter tb_map_iter;
@@ -20,15 +19,18 @@ typedef struct tb_map_entry tb_map_entry;
 typedef struct
 {
     tb_map_entry* root;
-    void*   (*alloc_func)(const void*);
-    void    (*free_func)(void*);
-    int     (*cmp_func)(uint32_t,uint32_t);
+    int     (*cmp_func)(const void*,const void*);
+    /* memory */
+    void*   (*key_alloc)(const void*);
+    void    (*key_free)(void*);
+    void*   (*value_alloc)(const void*);
+    void    (*value_free)(void*);
 } tb_map;
 
 /*
  * Initializes the map and allocates all associated memory.
  */
-tb_map_error tb_map_alloc(tb_map* map, int(*cmp_func)(uint32_t,uint32_t));
+tb_map_error tb_map_alloc(tb_map* map, int(*cmp_func)(const void*,const void*));
 
 /*
  * Free the map and all associated memory.
@@ -36,9 +38,10 @@ tb_map_error tb_map_alloc(tb_map* map, int(*cmp_func)(uint32_t,uint32_t));
 void tb_map_free(tb_map* map);
 
 /*
- * Enable internal memory allocation and management of values.
+ * Enable internal memory allocation and management of keys and values.
  */
-void tb_map_set_mem_funcs(tb_map* map, void* (*alloc_func)(const void*), void (*free_func)(void*));
+void tb_map_set_key_alloc_funcs(tb_map* map, void* (*alloc_func)(const void*), void (*free_func)(void*));
+void tb_map_set_value_alloc_funcs(tb_map* map, void* (*alloc_func)(const void*), void (*free_func)(void*));
 
 /*
  * Remove all entries.
@@ -49,19 +52,19 @@ void tb_map_clear(tb_map* map);
  * Insert an new entry into a given map
  * Returns TB_MAP_OK on success and tb_map_error else
  */
-tb_map_error tb_map_insert(tb_map* map, uint32_t key, void* value);
+tb_map_error tb_map_insert(tb_map* map, void* key, void* value);
 
 /*
  * Remove an entry with the given key from a given map
  * Returns TB_MAP_OK on success and tb_map_error else
  */
-tb_map_error tb_map_remove(tb_map* map, uint32_t key);
+tb_map_error tb_map_remove(tb_map* map, const void* key);
 
 /*
  * Find an entry in a given map
  * Returns the value of the found entry on success and NULL else
  */
-void* tb_map_find(const tb_map* map, uint32_t key);
+void* tb_map_find(const tb_map* map, const void* key);
 
 /*
  * Get a new map iterator.
@@ -90,7 +93,7 @@ tb_map_iter* tb_map_iter_remove(tb_map* map, const tb_map_iter* iter);
 /*
  * Return the key of the entry pointed to by the iterator.
  */
-uint32_t tb_map_iter_get_key(const tb_map_iter* iter);
+const void* tb_map_iter_get_key(const tb_map_iter* iter);
 
 /*
  * Return the value of the entry pointed to by the iterator.
