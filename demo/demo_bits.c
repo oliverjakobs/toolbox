@@ -1,4 +1,4 @@
-#include "../tb_bits.h"
+#include "../src/tb_bits.h"
 
 #include <stdio.h>
 

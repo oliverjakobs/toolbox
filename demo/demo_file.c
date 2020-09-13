@@ -1,4 +1,4 @@
-#include "../tb_file.h"
+#include "../src/tb_file.h"
 
 #define FILE_BUFFER_MAX_SIZE    10485761 // 10MB
 #define FILE_CHUNK_SIZE         10485761

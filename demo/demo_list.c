@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../tb_list.h"
+#include "../src/tb_list.h"
 
 /* ----------------------------------------------------------- */
 

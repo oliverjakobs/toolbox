@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "../tb_jwrite.h"
+#include "../src/tb_jwrite.h"
 
 void tb_jwrite_object_example(const char* path)
 {
