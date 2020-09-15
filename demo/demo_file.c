@@ -12,26 +12,21 @@ double get_time_spent(clock_t begin, clock_t end)
 
 int main()
 {
-    char* filename_r = "res/10mb.txt";
-    char* filename_w = "res/write.txt";
-    FILE* file_r;
-    FILE* file_w;
-
-    if ((file_r = fopen(filename_r, "rb")) == NULL)
-    {
-        printf("Failed to open file: %s\n", filename_r);
-        return 1;
-    }
-
-    if ((file_w = fopen(filename_w, "wb")) == NULL)
-    {
-        printf("Failed to open file: %s\n", filename_w);
-        return 1;
-    }
+    char* filename_big = "res/10mb.txt";
+    char* filename_write = "res/write.txt";
+    char* filename_read = "res/test.txt";
 
     char* data;
     size_t size;
-    int status = TB_FILE_OK;
+
+    FILE* file;
+
+    if (!(file = fopen(filename_big, "rb")))
+    {
+        printf("Failed to open file: %s\n", filename_big);
+        return 1;
+    }
+
 
     // clock
     clock_t begin, end;
@@ -39,16 +34,15 @@ int main()
     // read_buffer
     begin = clock();
 
-    status = tb_file_read_buffer(file_r, &data, &size, FILE_BUFFER_MAX_SIZE);
-    if(status != TB_FILE_OK)
+    size = tb_file_get_size(file);
+    data = malloc(size + 1);
+    if(tb_file_read_buffer(file, data, size) != TB_FILE_OK)
     {
-        printf("Failed to read file: %s\n", filename_r);
+        printf("Failed to read file: %s\n", filename_big);
 
         free(data);
-        fclose(file_r);
-        fclose(file_w);
-
-        return status;
+        fclose(file);
+        return 1;
     }
 
     end = clock();
@@ -61,21 +55,18 @@ int main()
 
     // refresh
     free(data);
-    rewind(file_r);
+    rewind(file);
 
-    // read_chunk
+    // read_chunk 
     begin = clock();
 
-    status = tb_file_read_chunk(file_r, &data, &size, FILE_CHUNK_SIZE);
-    if (status != TB_FILE_OK)
+    if (tb_file_read_chunk(file, &data, &size, FILE_CHUNK_SIZE) != TB_FILE_OK)
     {
-        printf("Failed to read file: %s\n", filename_r);
+        printf("Failed to read file: %s\n", filename_big);
 
         free(data);
-        fclose(file_r);
-        fclose(file_w);
-
-        return status;
+        fclose(file);
+        return 1;
     }
 
     end = clock();
@@ -86,27 +77,31 @@ int main()
     printf("Read %d bytes in %d ticks.\n", size, (end - begin));
     printf("-----------------------------------\n");
 
-    fclose(file_r);
-
-    /*
-    // write
-    status = tbf_write(file_w, data, size);
-    if (status != TB_FILE_OK)
-    {
-        printf("Failed to write to file: %s\n", filename_w);
-
-        free(data);
-        fclose(file_w);
-
-        return status;
-    }
-
-    printf("Successfully wrote to file: %s\n", filename_w);
-
-    */
-
-    fclose(file_w);
+    fclose(file);
     free(data);
 
-    return status;
+    /* Test writing */
+    tb_file_error error;
+    data = tb_file_read(filename_read, "rb", &error);
+    if (!data)
+    {
+        printf("Failed to read file: %s (%s)\n", filename_read, tb_file_error_to_string(error));
+        return 1;
+    }
+
+    // write
+    error = tb_file_write(filename_write, "wb", data);
+    if (error != TB_FILE_OK)
+    {
+        printf("Failed to write to file: %s (%s)\n", filename_write, tb_file_error_to_string(error));
+
+        free(data);
+        return 1;
+    }
+
+    printf("Successfully wrote to file: %s\n", filename_write);
+
+    free(data);
+
+    return 0;
 }

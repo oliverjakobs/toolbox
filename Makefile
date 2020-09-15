@@ -8,7 +8,7 @@ jwrite: demo/demo_jwrite.c src/tb_jwrite.c
 
 # file
 file: demo/demo_file.c src/tb_file.c
-	gcc demo/demo_file.c src/tb_file.c -o file -Wall -std=c99
+	gcc demo/demo_file.c src/tb_file.c -o file -Wall -g -std=c99
 
 # array
 

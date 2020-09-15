@@ -15,14 +15,17 @@ extern "C"
 #include <stdio.h>
 #include <string.h>
 
+#define TB_FILE_COPY_BUFFER_SIZE    4096
+
 /* ----------------------| error codes |-------------------------- */
 typedef enum
 {
-    TB_FILE_OK = 0,     /* Success */
-    TB_FILE_INVALID,    /* Invalid parameters */
-    TB_FILE_ERROR,      /* Stream error */
-    TB_FILE_OVERFLOW,   /* Too much input */
-    TB_FILE_OOM         /* Out of memory */
+    TB_FILE_OK = 0,
+    TB_FILE_INVALID,        /* Invalid parameters */
+    TB_FILE_OPEN_ERROR,     /* Stream error */
+    TB_FILE_READ_ERROR,
+    TB_FILE_WRITE_ERROR,
+    TB_FILE_MEMORY_ERROR
 } tb_file_error;
 
 /*
@@ -37,13 +40,30 @@ typedef enum
  */
 tb_file_error tb_file_read_chunk(FILE* file, char** dataptr, size_t* sizeptr, size_t chunk_size);
 
-/*
- * reads file into a malloc'd buffer with appended '\0' terminator
- * limits malloc() to max_size bytes
- */
-tb_file_error tb_file_read_buffer(FILE* file, char** dataptr, size_t* sizeptr, size_t max_size);
 
-tb_file_error tb_file_write(FILE* file, char* data, size_t size);
+tb_file_error tb_file_read_buffer(FILE* file, char* buffer, size_t size);
+
+/*
+ * Reads an '\0'-terminated string from the file specified by path.
+ */
+char* tb_file_read(const char* path, const char* mode, tb_file_error* err);
+
+/*
+ * Writes an '\0'-terminated string to the file specified by path.
+ */
+tb_file_error tb_file_write(const char* path, const char* mode, const char* data);
+
+/*
+ * Copies a file from src_path to dst_path.
+ */
+tb_file_error tb_file_copy(const char* src_path, const char* dst_path);
+
+/*
+ * Returns the size of the file 
+ */
+size_t tb_file_get_size(FILE* file);
+
+const char* tb_file_error_to_string(tb_file_error error);
 
 #ifdef __cplusplus
 }
