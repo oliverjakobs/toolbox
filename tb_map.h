@@ -109,7 +109,6 @@ void* tb_map_iter_get_value(const tb_map_iter* iter);
 
 #ifdef TB_MAP_IMPLEMENTATION
 
-#include "tb_map.h"
 
 #include <stdlib.h>
 

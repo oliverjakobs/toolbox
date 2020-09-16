@@ -1,5 +1,5 @@
 /*
-tb_jwrite v0.6 - Utilities for files
+tb_jwrite v0.7 - Utilities for files
 -----------------------------------------------------------------------------------------
 */
 
@@ -15,35 +15,42 @@ extern "C"
 #include <stdio.h>
 #include <string.h>
 
+#define TB_FILE_COPY_BUFFER_SIZE    4096
+
 /* ----------------------| error codes |-------------------------- */
 typedef enum
 {
-    TB_FILE_OK = 0,     /* Success */
-    TB_FILE_INVALID,    /* Invalid parameters */
-    TB_FILE_ERROR,      /* Stream error */
-    TB_FILE_OVERFLOW,   /* Too much input */
-    TB_FILE_OOM         /* Out of memory */
+    TB_FILE_OK = 0,
+    TB_FILE_OPEN_ERROR,
+    TB_FILE_READ_ERROR,
+    TB_FILE_WRITE_ERROR,
+    TB_FILE_MEMORY_ERROR
 } tb_file_error;
 
 /*
- * Read the input in chunks of size chunk_size, dynamically reallocating the 
- * buffer as needed. Only using realloc(), fread(), ferror(), and free()
- *
- * If successful (return FILE_OK):
- *  (*dataptr) points to a dynamically allocated buffer, with
- *  (*sizeptr) bytes read from the file.
- *  The buffer is allocated for one extra char, which is '\0',
- *  and automatically appended after the data.
+ * Reads an '\0'-terminated string from the file specified by path.
  */
-tb_file_error tb_file_read_chunk(FILE* file, char** dataptr, size_t* sizeptr, size_t chunk_size);
+char* tb_file_read(const char* path, const char* mode, tb_file_error* err);
 
 /*
- * reads file into a malloc'd buffer with appended '\0' terminator
- * limits malloc() to max_size bytes
+ * Writes an '\0'-terminated string to the file specified by path.
  */
-tb_file_error tb_file_read_buffer(FILE* file, char** dataptr, size_t* sizeptr, size_t max_size);
+tb_file_error tb_file_write(const char* path, const char* mode, const char* data);
 
-tb_file_error tb_file_write(FILE* file, char* data, size_t size);
+/*
+ * Copies a file from src_path to dst_path without dynamic memory allocations.
+ */
+tb_file_error tb_file_copy(const char* src_path, const char* dst_path);
+
+/*
+ * Returns the size of the file 
+ */
+size_t tb_file_get_size(FILE* file);
+
+/*
+ * Returns an human readable description for a tb_file_error.
+ */
+const char* tb_file_error_to_string(tb_file_error error);
 
 #ifdef __cplusplus
 }
@@ -58,114 +65,102 @@ tb_file_error tb_file_write(FILE* file, char* data, size_t size);
 
 #ifdef TB_FILE_IMPLEMENTATION
 
-#include "tb_file.h"
 
-tb_file_error tb_file_read_chunk(FILE* file, char** dataptr, size_t* sizeptr, size_t chunk_size)
+char* tb_file_read(const char* path, const char* mode, tb_file_error* err)
 {
-    char* data = NULL;
-    char* temp;
+    FILE* file = fopen(path, mode);
 
-    size_t max_size = 0;
-    size_t size = 0;
-
-    /* None of the parameters can be NULL. */
-    if (file == NULL || dataptr == NULL || sizeptr == NULL)
-        return TB_FILE_INVALID;
-
-    /* A read error already occurred? */
-    if (ferror(file))
-        return TB_FILE_ERROR;
-
-    while (1)
+    if (!file)
     {
-        if (size + chunk_size + 1 > max_size) 
-        {
-            max_size = size + chunk_size + 1;
-
-            /* Overflow check. Some ANSI C compilers may optimize this away, though. */
-            if (max_size <= size)
-            {
-                free(data);
-                return TB_FILE_OVERFLOW;
-            }
-
-            temp = realloc(data, max_size);
-            if (temp == NULL) 
-            {
-                free(data);
-                return TB_FILE_OOM;
-            }
-            data = temp;
-        }
-
-        size_t elem = fread(data + size, 1, chunk_size, file);
-        if (elem == 0)
-            break;
-
-        size += elem;
+        if (err) *err = TB_FILE_OPEN_ERROR;
+        return NULL;
     }
 
-    if (ferror(file)) 
+    if (err) *err = TB_FILE_OK;
+
+    size_t size = tb_file_get_size(file);
+    char* buffer = calloc(size + 1, 1);
+
+    if (!buffer)
     {
-        free(data);
-        return TB_FILE_ERROR;
+        if (err) *err = TB_FILE_MEMORY_ERROR;
+        fclose(file);
+        return NULL;
     }
 
-    temp = realloc(data, size + 1);
-    if (temp == NULL) 
+    if (fread(buffer, 1, size, file) != size)
     {
-        free(data);
-        return TB_FILE_OOM;
+        free(buffer);
+        fclose(file);
+        if (err) *err = TB_FILE_READ_ERROR;
+
+        return NULL;
     }
+    fclose(file);
 
-    data = temp;
-    data[size] = '\0';
+    return buffer;
+}
 
-    *dataptr = data;
-    *sizeptr = size;
+tb_file_error tb_file_write(const char* path, const char* mode, const char* data)
+{
+    FILE* file = fopen(path, mode);
+
+    if (!file) return TB_FILE_OPEN_ERROR;
+
+    size_t size = strlen(data);
+    if (fwrite(data, 1, size, file) != size)
+        return TB_FILE_WRITE_ERROR;
 
     return TB_FILE_OK;
 }
 
-tb_file_error tb_file_read_buffer(FILE* file, char** dataptr, size_t* sizeptr, size_t max_size)
+tb_file_error tb_file_copy(const char* src_path, const char* dst_path)
 {
-    char* data = NULL;
-    size_t size = 0;
+    char buffer[TB_FILE_COPY_BUFFER_SIZE];
+    size_t size;
 
-    /* find file size */
+    FILE* src = fopen(src_path, "rb");
+    FILE* dst = fopen(dst_path, "wb");
+
+    if (!(src && dst))
+    {
+        fclose(src);
+        fclose(dst);
+        return TB_FILE_OPEN_ERROR;
+    }
+
+    while ((size = fread(buffer, 1, TB_FILE_COPY_BUFFER_SIZE, src)))
+        fwrite(buffer, 1, TB_FILE_COPY_BUFFER_SIZE, dst);
+
+    fclose(src);
+    fclose(dst);
+    return TB_FILE_OK;
+}
+
+size_t tb_file_get_size(FILE* file)
+{
+    size_t size = 0;
+    size_t reset = ftell(file);
+
     fseek(file, 0, SEEK_END);
     size = ftell(file);
-    rewind(file);
+    fseek(file, reset, SEEK_SET);
 
-    if (size >= max_size)
-    {
-        return TB_FILE_OVERFLOW;
-    }
-
-    data = (char*)malloc(size + 1);
-    memset(data, 0, size + 1); /* +1 guarantees trailing \0 */
-
-    if (fread(data, size, 1, file) != 1)
-    {
-        free(data);
-        return TB_FILE_ERROR;
-    }
-    
-    *dataptr = data;
-    *sizeptr = size;
-
-    return TB_FILE_OK;
+    return size;
 }
 
-tb_file_error tb_file_write(FILE* file, char* data, size_t size)
+const char* tb_file_error_to_string(tb_file_error error)
 {
-    if (fwrite(data, size, 1, file) != 1)
+    switch (error)
     {
-        return TB_FILE_ERROR;
+    case TB_FILE_OK:            return "Ok";
+    case TB_FILE_OPEN_ERROR:    return "Failed to open file";
+    case TB_FILE_READ_ERROR:    return "Failed to read file";
+    case TB_FILE_WRITE_ERROR:   return "Failed to write to file";
+    case TB_FILE_MEMORY_ERROR:  return "Failed to allocate memory";
+    default:                    return "Unkown error";
     }
-
-    return TB_FILE_OK;
-}
+};
 
 #endif /* !TB_FILE_IMPLEMENTATION */
 

@@ -74,7 +74,6 @@ void* tb_list_last(const tb_list* list);
 
 #ifdef TB_LIST_IMPLEMENTATION
 
-#include "tb_list.h"
 
 #include <string.h>
 #include <stdio.h>

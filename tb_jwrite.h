@@ -179,7 +179,6 @@ char* tb_jwrite_error_string(tb_jwrite_error err);
 
 #ifdef TB_JWRITE_IMPLEMENTATION
 
-#include "tb_jwrite.h"
 
 #include <stddef.h>
 #include <string.h>

@@ -72,7 +72,6 @@ size_t tb_array_search(tb_array* arr, const void* element, int (*cmp)(const void
 
 #ifdef TB_ARRAY_IMPLEMENTATION
 
-#include "tb_array.h"
 
 #include <string.h>
 

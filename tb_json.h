@@ -259,7 +259,6 @@ char* tb_json_error_to_string(tb_json_error error);     /* string descibes error
 
 #ifdef TB_JSON_IMPLEMENTATION
 
-#include "tb_json.h"
 
 #include <stdio.h>
 #include <stdlib.h>

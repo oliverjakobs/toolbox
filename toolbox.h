@@ -39,7 +39,6 @@ inline uint8_t tb_between_f(int start, int end, int value) { return (value >= st
 
 #ifdef TOOLBOX_IMPLEMENTATION
 
-#include "toolbox.h"
 
 void tb_swap(void** a, void** b)
 {

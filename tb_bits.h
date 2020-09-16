@@ -34,7 +34,6 @@ char* tb_bits_str(char* buf, uint8_t value);
 
 #ifdef TB_BITS_IMPLEMENTATION
 
-#include "tb_bits.h"
 
 uint8_t tb_bits_set(uint8_t value, uint8_t position)
 {
