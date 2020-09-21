@@ -223,7 +223,7 @@ void* tb_hashmap_insert(tb_hashmap* map, const void* key, void* value)
     else
         entry->value = value;
     
-    return value;
+    return entry->value ? value : NULL;
 }
 
 tb_hashmap_error tb_hashmap_remove(tb_hashmap* map, const void *key)
