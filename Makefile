@@ -11,6 +11,8 @@ file: demo/demo_file.c src/tb_file.c
 	gcc demo/demo_file.c src/tb_file.c -o file -Wall -g -std=c99
 
 # array
+array: demo/demo_array.c src/tb_array.c
+	gcc demo/demo_array.c src/tb_array.c -o array -Wall -std=c99
 
 # list
 list: demo/demo_list.c src/tb_list.c

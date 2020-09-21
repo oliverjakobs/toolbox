@@ -17,14 +17,19 @@ typedef struct
     size_t capacity;
     size_t used;
 
+    float growth;
+
     size_t element_size;
 } tb_array;
 
 /* Allocates a new array and initializes it */
-tb_array_error tb_array_alloc(tb_array* arr, size_t initial_size, size_t element_size);
+tb_array_error tb_array_alloc(tb_array* arr, size_t initial_size, size_t element_size, float growth);
 
 /* Frees the array and all associated memory */
 void tb_array_free(tb_array* arr);
+
+/* To prevent the array from growing set growth to zero */
+void tb_array_set_growth(tb_array* arr, float growth);
 
 /* Resizes the set to new_size */
 tb_array_error tb_array_resize(tb_array* arr, size_t new_size);
@@ -35,11 +40,8 @@ tb_array_error tb_array_shrink_to_fit(tb_array* arr);
 /* Clears the array (sets arr->used to 0) */
 void tb_array_clear(tb_array* arr);
 
-/* Inserts an element at the end of the array if there is enough capacity */
-void* tb_array_push(tb_array* arr, void* element);
-
 /* Inserts an element at the end of the array and grows the array if necessary */
-void* tb_array_push_and_grow(tb_array* arr, void* element, float growth);
+void* tb_array_push(tb_array* arr, void* element);
 
 /* Inserts an element at the given index if the index is not out of bounds */
 void* tb_array_insert(tb_array* arr, void* element, size_t index);
