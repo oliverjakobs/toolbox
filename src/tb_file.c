@@ -6,39 +6,48 @@ char* tb_file_read(const char* path, const char* mode, tb_file_error* err)
 
     if (!file)
     {
-        if (err) *err = TB_FILE_OPEN_ERROR;
+        *err = TB_FILE_OPEN_ERROR;
         return NULL;
     }
-
-    if (err) *err = TB_FILE_OK;
 
     size_t size = tb_file_get_size(file);
     char* buffer = calloc(size + 1, 1);
 
     if (!buffer)
-    {
-        if (err) *err = TB_FILE_MEMORY_ERROR;
-        fclose(file);
-        return NULL;
-    }
-
-    if (fread(buffer, 1, size, file) != size)
+        *err = TB_FILE_MEMORY_ERROR;
+    else if (fread(buffer, 1, size, file) == size)
+        *err = TB_FILE_OK;
+    else
     {
         free(buffer);
-        fclose(file);
-        if (err) *err = TB_FILE_READ_ERROR;
-
-        return NULL;
+        buffer = NULL;
+        *err = TB_FILE_READ_ERROR;
     }
-    fclose(file);
 
+    fclose(file);
     return buffer;
+}
+
+tb_file_error tb_file_read_buffer(const char* path, const char* mode, char* buffer, size_t size)
+{
+    FILE* file = fopen(path, mode);
+    if (!file) return TB_FILE_OPEN_ERROR;
+
+    tb_file_error status = TB_FILE_OK;
+    size_t file_size = tb_file_get_size(file);
+
+    if (file_size > size)
+        status = TB_FILE_OVERFLOW;
+    else if (fread(buffer, 1, file_size, file) != file_size)
+        status = TB_FILE_READ_ERROR;
+
+    fclose(file);
+    return status;
 }
 
 tb_file_error tb_file_write(const char* path, const char* mode, const char* data)
 {
     FILE* file = fopen(path, mode);
-
     if (!file) return TB_FILE_OPEN_ERROR;
 
     size_t size = strlen(data);

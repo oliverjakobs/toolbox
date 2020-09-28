@@ -24,13 +24,16 @@ typedef enum
     TB_FILE_OPEN_ERROR,
     TB_FILE_READ_ERROR,
     TB_FILE_WRITE_ERROR,
-    TB_FILE_MEMORY_ERROR
+    TB_FILE_MEMORY_ERROR,
+    TB_FILE_OVERFLOW
 } tb_file_error;
 
 /*
  * Reads an '\0'-terminated string from the file specified by path.
  */
 char* tb_file_read(const char* path, const char* mode, tb_file_error* err);
+
+tb_file_error tb_file_read_buffer(const char* path, const char* mode, char* buffer, size_t size);
 
 /*
  * Writes an '\0'-terminated string to the file specified by path.
