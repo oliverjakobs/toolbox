@@ -92,6 +92,17 @@ size_t tb_file_get_size(FILE* file)
     return size;
 }
 
+const char* tb_file_get_filename(const char* path)
+{
+    const char* filename = strrchr(path, '\\');
+    if (filename) return filename + 1;
+
+    filename = strrchr(path, '/');
+    if (filename) return filename + 1;
+
+    return path;
+}
+
 const char* tb_file_error_to_string(tb_file_error error)
 {
     switch (error)

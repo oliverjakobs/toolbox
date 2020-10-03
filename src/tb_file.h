@@ -51,6 +51,11 @@ tb_file_error tb_file_copy(const char* src_path, const char* dst_path);
 size_t tb_file_get_size(FILE* file);
 
 /*
+ *  Returns the filename from a given path
+ */
+const char* tb_file_get_filename(const char* path);
+
+/*
  * Returns an human readable description for a tb_file_error.
  */
 const char* tb_file_error_to_string(tb_file_error error);
