@@ -1,70 +1,61 @@
-/*
-tb_jwrite v1.0 - a *really* simple JSON writer
------------------------------------------------------------------------------------------
+// A *really* simple JSON writer in C
+// - a collection of functions to generate JSON semi-automatically
+//
+// The idea is to simplify writing native C values into a JSON string and
+// to provide some error trapping to ensure that the result is valid JSON.
+//
+// Example:
+//  tb_jwrite_control jwc;
+//
+//  tb_jwrite_open(&jwc, buffer, buflen, TB_JWRITE_OBJECT, 1);    // open root node as object
+//  tb_jwrite_obj_string(&jwc, "key", "value");
+//  tb_jwrite_obj_int(&jwc, "int", 1);
+//  tb_jwrite_obj_array(&jwc, "anArray");
+//      tb_jwrite_array_int(&jwc, 0);
+//      tb_jwrite_array_int(&jwc, 1);
+//      tb_jwrite_array_int(&jwc, 2);
+//  tb_jwrite_end(&jwc);
+//  tb_jwrite_error err = tb_jwrite_close(&jwc);          // close root object
+//
+// results in:
+//
+//  {
+//      "key": "value",
+//      "int": 1,
+//      "anArray": [
+//          0,
+//          1,
+//          2
+//      ]
+//  }
+//
+// Note that tb_jwrite handles string quoting and getting commas in the right place.
+// If the sequence of calls is incorrect
+// e.g.
+//      tb_jwrite_open(buffer, buflen, TB_JWRITE_OBJECT, 1);
+//      tb_jwrite_obj_string("key", "value");
+//          tb_jwrite_array_int(0);
+//      ...
+//
+// then the error code returned from jwClose() would indicate that you attempted to
+// put an array element into an object (instead of a key:value pair)
+// To locate the error, the supplied buffer has the JSON created upto the error point
+// and a call to jwErrorPos() would return the function call at which the error occurred
+// - in this case 3, the 3rd function call "tb_jwrite_array_int(0)" is not correct at this point.
+//
+// The root JSON type can be TB_JWRITE_OBJECT or TB_JWRITE_ARRAY.
+//
+// For more information on each function, see the prototypes below.
 
-A collection of functions to generate JSON semi-automatically.
-The idea is to simplify writing native C values into a JSON string and to provide some 
-error trapping to ensure that the result is valid JSON.
-
-Example:
-    
-    tb_jwrite_control jwc;
-
-    tb_jwrite_open(&jwc, buffer, buflen, TB_JWRITE_OBJECT, 1);
-    tb_jwrite_obj_string(&jwc, "key", "value");
-    tb_jwrite_obj_int(&jwc, "int", 1);
-    tb_jwrite_obj_array(&jwc, "anArray");
-        tb_jwrite_array_int(&jwc, 0);
-        tb_jwrite_array_int(&jwc, 1);
-        tb_jwrite_array_int(&jwc, 2);
-    tb_jwrite_end(&jwc);
-    tb_jwrite_error err = tb_jwrite_close(&jwc);
-
-Results in:
-    {
-        "key": "value",
-        "int": 1,
-        "anArray": [ 0, 1, 2 ]
-    }
-
-Note that tb_jwrite handles string quoting and getting commas in the right place.
-
-If the sequence of calls is incorrect
-
-for example:
-    tb_jwrite_open(buffer, buflen, TB_JWRITE_OBJECT, 1);
-    tb_jwrite_obj_string("key", "value");
-    tb_jwrite_array_int(0);
-    ...
-
-then the error code returned from tb_jwrite_close() would indicate that you attempted to
-put an array element into an object (instead of a key:value pair)
-
-To locate the error, the supplied buffer has the JSON created upto the error point
-and a call to jwErrorPos() would return the function call at which the error occurred
- - in this case 3, the 3rd function call "tb_jwrite_array_int(0)" is not correct at this point.
-
-After an error, all following tb_jwrite calls are skipped internally so the error code is 
-for the first error detected.
-
-*/
-
-
-#ifndef TB_JWRITE_H
-#define TB_JWRITE_H
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+#ifndef TB_JWRITE_INCLUDE_H
+#define TB_JWRITE_INCLUDE_H
 
 #include <stdio.h>
 #include <stdint.h>
 
-#define TB_JWRITE_STACK_DEPTH   32   /* max nesting depth of objects/arrays */
-#define TB_JWRITE_TMP_BUF_SIZE  32   /* max size of the buffer used for ftoa and itoa */
+#define TB_JWRITE_STACK_DEPTH 32   // max nesting depth of objects/arrays
 
-/* Output string style settings for tb_jwrite_open() */
+// output string style settings for tb_jwrite_open()
 typedef enum
 {
     TB_JWRITE_COMPACT,
@@ -72,16 +63,16 @@ typedef enum
     TB_JWRITE_NEWLINE
 } tb_jwrite_style;
 
-/* ----------------------| error codes |-------------------------- */
+// Error Codes
+// -----------
 typedef enum
 {
     TB_JWRITE_OK,
-    TB_JWRITE_FILE_ERROR,
-    TB_JWRITE_NOT_ARRAY,    /* tried to write Array value into Object */
-    TB_JWRITE_NOT_OBJECT,   /* tried to write Object key/value into Array */
-    TB_JWRITE_STACK_FULL,   /* array/object nesting > TB_JWRITE_STACK_DEPTH */
-    TB_JWRITE_STACK_EMPTY,  /* stack underflow error (too many 'end's) */
-    TB_JWRITE_NEST_ERROR,   /* nesting error, not all objects closed when tb_jwrite_close() called */
+    TB_JWRITE_NOT_ARRAY,   // tried to write Array value into Object
+    TB_JWRITE_NOT_OBJECT,  // tried to write Object key/value into Array
+    TB_JWRITE_STACK_FULL,  // array/object nesting > TB_JWRITE_STACK_DEPTH
+    TB_JWRITE_STACK_EMPTY, // stack underflow error (too many 'end's)
+    TB_JWRITE_NEST_ERROR,   // nesting error, not all objects closed when tb_jwrite_close() called
     TB_JWRITE_WRITE_ERROR
 } tb_jwrite_error;
 
@@ -100,77 +91,71 @@ typedef struct
 typedef struct
 {
     FILE* file;
-    char tmp_buf[TB_JWRITE_TMP_BUF_SIZE];           /* local buffer for int/double convertions */
-    tb_jwrite_error error;                          /* error code */
-    int call;                                       /* call on which error occurred */
-    tb_jwrite_node nodes[TB_JWRITE_STACK_DEPTH];    /* stack of array/object nodes */
-    int stack_pos;
+    char tmpbuf[32];        // local buffer for int/double convertions
+    tb_jwrite_error error;  // error code
+    int call;               // call on which error occurred
+    tb_jwrite_node nodes[TB_JWRITE_STACK_DEPTH]; // stack of array/object nodes
+    int stackpos;
     tb_jwrite_style style;
     int float_prec;
 } tb_jwrite_control;
 
-/*
- * Initialises tb_jwrite_control with the application supplied taget path
- * root_type is the base JSON type: TB_JWRITE_OBJECT or TB_JWRITE_ARRAY
- * style controls 'prettifying' the output: TB_JWRITE_PRETTY or TB_JWRITE_COMPACT
- * returns TB_JWRITE_OK on success or error code
- */ 
-tb_jwrite_error tb_jwrite_open(tb_jwrite_control* jwc, const char* target, tb_jwrite_node_type root_type, tb_jwrite_style style);
 
-/*
- * Closes the tb_jwrite_control opened by tb_jwrite_open()
- * returns TB_JWRITE_OK on success or error code
- */
+// tb_jwrite_open
+// - initialises tb_jwrite with the application supplied 'buffer' of length 'buflen'
+//   in operation, the buffer will always contain a valid '\0'-terminated string
+// - tb_jwrite will not overrun the buffer (it returns an "output buffer full" error)
+// - rootType is the base JSON type: TB_JWRITE_OBJECT or TB_JWRITE_ARRAY
+// - style controls 'prettifying' the output: TB_JWRITE_PRETTY or TB_JWRITE_COMPACT
+void tb_jwrite_open(tb_jwrite_control* jwc, const char* target, tb_jwrite_node_type root_type, tb_jwrite_style style);
+
+// tb_jwrite_close
+// - closes the element opened by tb_jwrite_open()
+// - returns error code (if everything was fine: TB_JWRITE_OK)
+// - after an error, all following tb_jwrite calls are skipped internally
+//   so the error code is for the first error detected
 tb_jwrite_error tb_jwrite_close(tb_jwrite_control* jwc);
 
 void tb_jwrite_set_style(tb_jwrite_control* jwc, tb_jwrite_style style);
 void tb_jwrite_set_float_prec(tb_jwrite_control* jwc, int prec);
 
-/* 
- * Object insertion functions
- * insert "key":"value" pairs into an object
- */
+// Object insertion functions
+// - used to insert "key":"value" pairs into an object
 void tb_jwrite_string(tb_jwrite_control* jwc, const char* key, const char* value);
 void tb_jwrite_int(tb_jwrite_control* jwc, const char* key, int32_t value);
 void tb_jwrite_float(tb_jwrite_control* jwc, const char* key, float value);
 void tb_jwrite_null(tb_jwrite_control* jwc, const char* key);
-/* put another object into the current object */
 void tb_jwrite_object(tb_jwrite_control* jwc, const char* key);
 void tb_jwrite_array(tb_jwrite_control* jwc, const char* key);
-/* Write the JSON value as the contents of rawtext (enclosing quotes are not added) */
-void tb_jwrite_raw(tb_jwrite_control* jwc, const char* key, const char* rawtext);
 
-/* 
- * Array insertion functions
- * insert "value" elements into an array
- */
+// Array insertion functions
+// - used to insert "value" elements into an array
 void tb_jwrite_array_string(tb_jwrite_control* jwc, const char* value);
 void tb_jwrite_array_int(tb_jwrite_control* jwc, int32_t value);
 void tb_jwrite_array_float(tb_jwrite_control* jwc, float value);
 void tb_jwrite_array_null(tb_jwrite_control* jwc);
 void tb_jwrite_array_object(tb_jwrite_control* jwc);
-/* put another array into the current array */
 void tb_jwrite_array_array(tb_jwrite_control* jwc);
-/* Write the JSON value as the contents of rawtext (enclosing quotes are not added) */
-void tb_jwrite_array_raw(tb_jwrite_control* jwc, const char* rawtext);
 
-/* defines the end of an object or array definition */
+// tb_jwrite_end
+// - defines the end of an Object or Array definition
 tb_jwrite_error tb_jwrite_end(tb_jwrite_control* jwc);
 
-/* 
- * If tb_jwrite_close returned an error, this function returns the number of the jwrite function call
- * which caused that error.
- */
+// these 'raw' routines write the JSON value as the contents of rawtext
+// i.e. enclosing quotes are not added
+// - use if your app. supplies its own value->string functions
+void tb_jwrite_object_raw(tb_jwrite_control* jwc, const char* key, const char* rawtext);
+void tb_jwrite_array_raw(tb_jwrite_control* jwc, const char* rawtext);
+
+// tb_jwrite_error_pos
+// - if tb_jwrite_close returned an error, this function returns the number of the jWrite function call
+//   which caused that error.
 int tb_jwrite_error_pos(tb_jwrite_control* jwc);
 
-/* Returns '\0'-termianted string describing the error code */
+// Returns '\0'-termianted string describing the error (as returned by tb_jwrite_close())
 char* tb_jwrite_error_string(tb_jwrite_error err);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* !TB_JWRITE_H */
+#endif // TB_JWRITE_INCLUDE_H
 /*
  * -----------------------------------------------------------------------------
  * ----| IMPLEMENTATION |-------------------------------------------------------
@@ -183,8 +168,9 @@ char* tb_jwrite_error_string(tb_jwrite_error err);
 #include <stddef.h>
 #include <string.h>
 
-static char* _tb_jwrite_itoa(char* buffer, int32_t value);
-static void _tb_jwrite_ftoa(char* buffer, float value, int precision);
+static void _tb_jwrite_modp_itoa10(int32_t value, char* str);
+static void _tb_jwrite_modp_ftoa2(float value, char* str, int prec);
+
 
 static void _tb_jwrite_put_ch(tb_jwrite_control* jwc, char c)
 {
@@ -211,7 +197,7 @@ static void _tb_jwrite_style(tb_jwrite_control* jwc)
     if (jwc->style == TB_JWRITE_NEWLINE)
     {
         _tb_jwrite_put_ch(jwc, '\n');
-        for (int i = 0; i < jwc->stack_pos + 1; i++)
+        for (int i = 0; i < jwc->stackpos + 1; i++)
             _tb_jwrite_put_raw(jwc, "    ");
     }
     else if (jwc->style == TB_JWRITE_INLINE)
@@ -223,51 +209,56 @@ static void _tb_jwrite_style(tb_jwrite_control* jwc)
 /* Push / Pop node stack */
 static void _tb_jwrite_push(tb_jwrite_control* jwc, tb_jwrite_node_type node_type)
 {
-    if ((jwc->stack_pos + 1) >= TB_JWRITE_STACK_DEPTH)
+    if ((jwc->stackpos + 1) >= TB_JWRITE_STACK_DEPTH)
     {
         jwc->error = TB_JWRITE_STACK_FULL; /* array/object nesting > TB_JWRITE_STACK_DEPTH */
     }
     else
     {
-        jwc->nodes[++jwc->stack_pos].type = node_type;
-        jwc->nodes[jwc->stack_pos].element = 0;
+        jwc->nodes[++jwc->stackpos].type = node_type;
+        jwc->nodes[jwc->stackpos].element = 0;
     }
 }
 
 static tb_jwrite_node_type _tb_jwrite_pop(tb_jwrite_control* jwc)
 {
-    tb_jwrite_node_type node = jwc->nodes[jwc->stack_pos].type;
-    if (jwc->stack_pos == 0)
+    tb_jwrite_node_type node = jwc->nodes[jwc->stackpos].type;
+    if (jwc->stackpos == 0)
         jwc->error = TB_JWRITE_STACK_EMPTY; /* stack underflow error (too many 'end's) */
     else
-        jwc->stack_pos--;
+        jwc->stackpos--;
     return node;
 }
 
-tb_jwrite_error tb_jwrite_open(tb_jwrite_control* jwc, const char* target, tb_jwrite_node_type root_type, tb_jwrite_style style)
+//------------------------------------------
+// tb_jwrite_open
+// - open writing of JSON starting with rootType = TB_JWRITE_OBJECT or TB_JWRITE_ARRAY
+// - initialise with user string buffer of length buflen
+// - isPretty=TB_JWRITE_PRETTY adds \n and spaces to prettify output (else TB_JWRITE_COMPACT)
+void tb_jwrite_open(tb_jwrite_control* jwc, const char* target, tb_jwrite_node_type root_type, tb_jwrite_style style)
 {
     jwc->file = fopen(target, "w");
 
-    if (!jwc->file) return TB_JWRITE_FILE_ERROR;
-
     jwc->nodes[0].type = root_type;
     jwc->nodes[0].element = 0;
-    jwc->stack_pos = 0;
+    jwc->stackpos = 0;
     jwc->error = TB_JWRITE_OK;
     jwc->call = 1;
     jwc->style = style;
     jwc->float_prec = 6;
 
     _tb_jwrite_put_ch(jwc, (root_type == TB_JWRITE_OBJECT) ? '{' : '[');
-
-    return TB_JWRITE_OK;
 }
 
+//------------------------------------------
+// tb_jwrite_close
+// - closes the root JSON object started by jwOpen()
+// - returns error code
 tb_jwrite_error tb_jwrite_close(tb_jwrite_control* jwc)
 {
     if (jwc->error == TB_JWRITE_OK)
     {
-        if (jwc->stack_pos == 0)
+        if (jwc->stackpos == 0)
         {
             tb_jwrite_node_type node = jwc->nodes[0].type;
             if (jwc->style == TB_JWRITE_NEWLINE)
@@ -288,20 +279,20 @@ tb_jwrite_error tb_jwrite_close(tb_jwrite_control* jwc)
 void tb_jwrite_set_style(tb_jwrite_control* jwc, tb_jwrite_style style)
 {
     jwc->style = style;
-    jwc->call++;
 }
 
 void tb_jwrite_set_float_prec(tb_jwrite_control* jwc, int prec)
 {
     jwc->float_prec = prec;
-    jwc->call++;
 }
 
+//------------------------------------------
+// End the current array/object
 tb_jwrite_error tb_jwrite_end(tb_jwrite_control* jwc)
 {
     if (jwc->error == TB_JWRITE_OK)
     {
-        int last_element = jwc->nodes[jwc->stack_pos].element;
+        int last_element = jwc->nodes[jwc->stackpos].element;
         tb_jwrite_node_type node = _tb_jwrite_pop(jwc);
         if (last_element > 0)
             _tb_jwrite_style(jwc);
@@ -310,24 +301,23 @@ tb_jwrite_error tb_jwrite_end(tb_jwrite_control* jwc)
     return jwc->error;
 }
 
+//------------------------------------------
+// Object insert functions
+//
 
-/* ----------------------| object |------------------------------- */
-
-/*
- * common object function:
- *  - checks error
- *  - checks current node is OBJECT
- *  - adds comma if required
- *  - adds "key" :
- */
+// *common Object function*
+// - checks error
+// - checks current node is OBJECT
+// - adds comma if reqd
+// - adds "key" :
 static tb_jwrite_error _tb_jwrite_object(tb_jwrite_control* jwc, const char* key)
 {
     if (jwc->error == TB_JWRITE_OK)
     {
         jwc->call++;
-        if (jwc->nodes[jwc->stack_pos].type != TB_JWRITE_OBJECT)
-            jwc->error = TB_JWRITE_NOT_OBJECT; /* tried to write object key/value into array */
-        else if (jwc->nodes[jwc->stack_pos].element++ > 0)
+        if (jwc->nodes[jwc->stackpos].type != TB_JWRITE_OBJECT)
+            jwc->error = TB_JWRITE_NOT_OBJECT; // tried to write Object key/value into Array
+        else if (jwc->nodes[jwc->stackpos].element++ > 0)
             _tb_jwrite_put_ch(jwc, ',');
         _tb_jwrite_style(jwc);
         _tb_jwrite_put_str(jwc, key);
@@ -338,12 +328,14 @@ static tb_jwrite_error _tb_jwrite_object(tb_jwrite_control* jwc, const char* key
     return jwc->error;
 }
 
-void tb_jwrite_raw(tb_jwrite_control* jwc, const char* key, const char* rawtext)
+// put raw string to object (i.e. contents of rawtext without quotes)
+void tb_jwrite_object_raw(tb_jwrite_control* jwc, const char* key, const char* rawtext)
 {
     if (_tb_jwrite_object(jwc, key) == TB_JWRITE_OK)
         _tb_jwrite_put_raw(jwc, rawtext);
 }
 
+// put "quoted" string to object
 void tb_jwrite_string(tb_jwrite_control* jwc, const char* key, const char* value)
 {
     if (_tb_jwrite_object(jwc, key) == TB_JWRITE_OK)
@@ -352,21 +344,22 @@ void tb_jwrite_string(tb_jwrite_control* jwc, const char* key, const char* value
 
 void tb_jwrite_int(tb_jwrite_control* jwc, const char* key, int32_t value)
 {
-    _tb_jwrite_itoa(jwc->tmp_buf, value);
-    tb_jwrite_raw(jwc, key, jwc->tmp_buf);
+    _tb_jwrite_modp_itoa10(value, jwc->tmpbuf);
+    tb_jwrite_object_raw(jwc, key, jwc->tmpbuf);
 }
 
 void tb_jwrite_float(tb_jwrite_control* jwc, const char* key, float value)
 {
-    _tb_jwrite_ftoa(jwc->tmp_buf, value, jwc->float_prec);
-    tb_jwrite_raw(jwc, key, jwc->tmp_buf);
+    _tb_jwrite_modp_ftoa2(value, jwc->tmpbuf, jwc->float_prec);
+    tb_jwrite_object_raw(jwc, key, jwc->tmpbuf);
 }
 
 void tb_jwrite_null(tb_jwrite_control* jwc, const char* key)
 {
-    tb_jwrite_raw(jwc, key, "null");
+    tb_jwrite_object_raw(jwc, key, "null");
 }
 
+// put Object in Object
 void tb_jwrite_object(tb_jwrite_control* jwc, const char* key)
 {
     if (_tb_jwrite_object(jwc, key) == TB_JWRITE_OK)
@@ -376,6 +369,7 @@ void tb_jwrite_object(tb_jwrite_control* jwc, const char* key)
     }
 }
 
+// put Array in Object
 void tb_jwrite_array(tb_jwrite_control* jwc, const char* key)
 {
     if (_tb_jwrite_object(jwc, key) == TB_JWRITE_OK)
@@ -385,34 +379,38 @@ void tb_jwrite_array(tb_jwrite_control* jwc, const char* key)
     }
 }
 
-/* ----------------------| array |-------------------------------- */
+//------------------------------------------
+// Array insert functions
+//
 
-/*
- * common array function
- *  - checks error
- *  - checks current node is ARRAY
- *  - adds comma if required
- */
+// *common Array function*
+// - checks error
+// - checks current node is ARRAY
+// - adds comma if reqd
 tb_jwrite_error _tb_jwrite_array(tb_jwrite_control* jwc)
 {
     if (jwc->error == TB_JWRITE_OK)
     {
         jwc->call++;
-        if (jwc->nodes[jwc->stack_pos].type != TB_JWRITE_ARRAY)
-            jwc->error = TB_JWRITE_NOT_ARRAY; /* tried to write array value into Object */
-        else if (jwc->nodes[jwc->stack_pos].element++ > 0)
+        if (jwc->nodes[jwc->stackpos].type != TB_JWRITE_ARRAY)
+            jwc->error = TB_JWRITE_NOT_ARRAY; // tried to write array value into Object
+        else if (jwc->nodes[jwc->stackpos].element++ > 0)
             _tb_jwrite_put_ch(jwc, ',');
         _tb_jwrite_style(jwc);
     }
     return jwc->error;
 }
 
+// put raw string to array (i.e. contents of rawtext without quotes)
+//
 void tb_jwrite_array_raw(tb_jwrite_control* jwc, const char* rawtext)
 {
     if (_tb_jwrite_array(jwc) == TB_JWRITE_OK)
         _tb_jwrite_put_raw(jwc, rawtext);
 }
 
+// put "quoted" string to array
+//
 void tb_jwrite_array_string(tb_jwrite_control* jwc, const char* value)
 {
     if (_tb_jwrite_array(jwc) == TB_JWRITE_OK)
@@ -421,14 +419,14 @@ void tb_jwrite_array_string(tb_jwrite_control* jwc, const char* value)
 
 void tb_jwrite_array_int(tb_jwrite_control* jwc, int32_t value)
 {
-    _tb_jwrite_itoa(jwc->tmp_buf, value);
-    tb_jwrite_array_raw(jwc, jwc->tmp_buf);
+    _tb_jwrite_modp_itoa10(value, jwc->tmpbuf);
+    tb_jwrite_array_raw(jwc, jwc->tmpbuf);
 }
 
 void tb_jwrite_array_float(tb_jwrite_control* jwc, float value)
 {
-    _tb_jwrite_ftoa(jwc->tmp_buf, value, jwc->float_prec);
-    tb_jwrite_array_raw(jwc, jwc->tmp_buf);
+    _tb_jwrite_modp_ftoa2(value, jwc->tmpbuf, jwc->float_prec);
+    tb_jwrite_array_raw(jwc, jwc->tmpbuf);
 }
 
 void tb_jwrite_array_null(tb_jwrite_control* jwc)
@@ -454,11 +452,18 @@ void tb_jwrite_array_array(tb_jwrite_control* jwc)
     }
 }
 
+//------------------------------------------
+// tb_jwrite_error_pos
+// - Returns position of error: the nth call to a TB_JWRITE function
+//
 int tb_jwrite_error_pos(tb_jwrite_control* jwc)
 {
     return jwc->call;
 }
 
+//------------------------------------------
+// tb_jwrite_error_string
+// - returns string describing error code
 char* tb_jwrite_error_string(tb_jwrite_error err)
 {
     switch (err)
@@ -474,52 +479,57 @@ char* tb_jwrite_error_string(tb_jwrite_error err)
     }
 }
 
-/* Utility function to reverse a string  */
-static void _tb_jwrite_strreverse(char* str, size_t length) 
-{
-    char temp;
-    for (size_t start = 0; start < length; start++, length--)
-    {
-        temp = str[start];
-        str[start] = str[length];
-        str[length] = temp;
-    }
-} 
-
+//=================================================================
+//
+// modp value-to-string functions
+// - modified for C89
+//
+// We use these functions as they are a lot faster than sprintf()
+//
+// Origin of these routines:
 /*
- * convert an signed integer to char buffer 
- * make sure buf is big enough
+ * <pre>
+ * Copyright &copy; 2007, Nick Galbreath -- nickg [at] modp [dot] com
+ * All rights reserved.
+ * http://code.google.com/p/stringencoders/
+ * Released under the bsd license.
+ * </pre>
  */
-char* _tb_jwrite_itoa(char* buf, int32_t value)
+
+static void _tb_jwrite_strreverse(char* begin, char* end)
 {
-    size_t i = 0;
+    char aux;
+    while (end > begin)
+        aux = *end, * end-- = *begin, * begin++ = aux;
+}
 
-    /* handle the sign */
-    uint32_t uvalue = (value < 0) ? -value : value;
+/* \brief convert an signed integer to char buffer
+ *
+ * \param[in] value
+ * \param[out] buf the output buffer.  Should be 16 chars or more.
+ */
+void _tb_jwrite_modp_itoa10(int32_t value, char* str)
+{
+    char* wstr = str;
+    // Take care of sign
+    unsigned int uvalue = (value < 0) ? -value : value;
+    // Conversion. Number is reversed.
+    do *wstr++ = (char)(48 + (uvalue % 10)); while (uvalue /= 10);
+    if (value < 0) *wstr++ = '-';
+    *wstr = '\0';
 
-    /* Process individual digits */
-    do buf[i++] = (char)(48 + (uvalue % 10)); while (uvalue /= 10);
-  
-    if (value < 0) buf[i++] = '-';
-    buf[i] = '\0';
-  
-    /* Reverse the string */ 
-    _tb_jwrite_strreverse(buf, i - 1);
-
-    return buf;
+    // Reverse string
+    _tb_jwrite_strreverse(str, wstr - 1);
 }
 
 /*
- * Taken from: https://github.com/client9/stringencoders
- * Released under the MIT license.
+ * Powers of 10
+ * 10^0 to 10^9
  */
-
-/* Powers of 10 - * 10^0 to 10^9 */
 static const double pow10[] = { 1, 10, 100, 1000, 10000, 100000, 1000000,
                                10000000, 100000000, 1000000000 };
 
-/*
- * \brief convert a floating point number to char buffer with a
+/* \brief convert a floating point number to char buffer with a
  *         variable-precision format, and no trailing zeros
  *
  * This is similar to "%.[0-9]f" in the printf style, except it will
@@ -534,8 +544,18 @@ static const double pow10[] = { 1, 10, 100, 1000, 10000, 100000, 1000000,
  * \param[in] precision  Number of digits to the right of the decimal point.
  *    Can only be 0-9.
  */
-void _tb_jwrite_ftoa(char* buf, float value, int precision)
+void _tb_jwrite_modp_ftoa2(float value, char* str, int prec)
 {
+    /* if input is larger than thres_max, revert to exponential */
+    const double thres_max = (double)(0x7FFFFFFF);
+    int count;
+    double diff = 0.0;
+    char* wstr = str;
+    int neg = 0;
+    int whole;
+    double tmp;
+    uint32_t frac;
+
     /* 
      * Hacky test for NaN
      * under -fast-math this won't work, but then you also won't
@@ -543,90 +563,112 @@ void _tb_jwrite_ftoa(char* buf, float value, int precision)
      * to link with libmath (bad) or hack IEEE double bits (bad)
      */
     if (!(value == value))
-        strcpy(buf,"nan");
-
-    /* if input is larger than thres_max, revert to exponential */
-    const double thres_max = (double)(0x7FFFFFFF);
-
-    double diff = 0.0;
-    char* wstr = buf;
-
-    if (precision < 0)
-        precision = 0;
-    else if (precision > 9)
-        precision = 9; /* precision of >= 10 can lead to overflow errors */
-
-    /* we'll work in positive values and deal with the negative sign issue later */
-    int neg = 0;
-    if (value < 0)
     {
+        str[0] = 'n'; str[1] = 'a'; str[2] = 'n'; str[3] = '\0';
+        return;
+    }
+
+    if (prec < 0)
+        prec = 0;
+    else if (prec > 9) /* precision of >= 10 can lead to overflow errors */
+        prec = 9;
+
+    /* 
+     * we'll work in positive values and deal with the
+     * negative sign issue later 
+     */
+    if (value < 0) {
         neg = 1;
         value = -value;
     }
 
-    int whole = (int)value;
-    double tmp = ((double)value - whole) * pow10[precision];
-    uint32_t frac = (uint32_t)(tmp);
+    whole = (int)value;
+    tmp = ((double)value - whole) * pow10[prec];
+    frac = (uint32_t)(tmp);
     diff = tmp - frac;
 
-    if ((diff > 0.5)
-        /* if halfway, round up if odd, OR if last digit is 0. That last part is strange */
-        || (diff == 0.5 && precision > 0 && (frac & 1)) 
-        || (diff == 0.5 && precision == 0 && (whole & 1)))
+    if (diff > 0.5)
     {
         ++frac;
         /* handle rollover, e.g.  case 0.99 with prec 1 is 1.0  */
-        if (frac >= pow10[precision])
+        if (frac >= pow10[prec])
         {
             frac = 0;
             ++whole;
         }
     }
+    else if (diff == 0.5 && ((frac == 0) || (frac & 1)))
+    {
+        /* if halfway, round up if odd, OR if last digit is 0.  That last part is strange */
+        ++frac;
+    }
 
-    /* 
+    /*
      * for very large numbers switch back to native sprintf for exponentials.
+     * anyone want to write code to replace this?
      * normal printf behavior is to print EVERY whole number digit
      * which can be 100s of characters overflowing your buffers == bad
      */
     if (value > thres_max)
     {
-        sprintf(buf, "%e", neg ? -value : value);
+        sprintf(str, "%e", neg ? -value : value);
         return;
     }
 
-    int has_decimal = 0;
-    int count = precision;
-
-    /* Remove ending zeros */
-    if (precision > 0)
+    if (prec == 0)
     {
-        while (count > 0 && ((frac % 10) == 0))
+        diff = (double)value - whole;
+        if (diff > 0.5)
         {
-            count--;
+            /* greater than 0.5, round up, e.g. 1.6 -> 2 */
+            ++whole;
+        }
+        else if (diff == 0.5 && (whole & 1))
+        {
+            /* exactly 0.5 and ODD, then round up */
+            /* 1.5 -> 2, but 2.5 -> 2 */
+            ++whole;
+        }
+
+        /* vvvvvvvvvvvvvvvvvvv  Diff from modp_dto2 */
+    }
+    else if (frac)
+    {
+        count = prec;
+        /*
+         * now do fractional part, as an unsigned number
+         * we know it is not 0 but we can have leading zeros, these
+         * should be removed
+         */
+        while (!(frac % 10))
+        {
+            --count;
             frac /= 10;
         }
+        /* ^^^^^^^^^^^^^^^^^^^  Diff from modp_dto2 */
+
+        /* now do fractional part, as an unsigned number */
+        do {
+            --count;
+            *wstr++ = (char)(48 + (frac % 10));
+        } while (frac /= 10);
+        /* add extra 0s */
+        while (count-- > 0) *wstr++ = '0';
+        /* add decimal */
+        *wstr++ = '.';
     }
 
-    while (count > 0)
-    {
-        --count;
-        *wstr++ = (char)(48 + (frac % 10));
-        frac /= 10;
-        has_decimal = 1;
-    }
-
-    if (frac > 0) ++whole;
-
-    /* add decimal */
-    if (has_decimal) *wstr++ = '.';
-
-    /* do whole part, take care of sign conversion. Number is reversed. */
+    /*
+     * do whole part
+     * Take care of sign
+     * Conversion. Number is reversed.
+     */
     do *wstr++ = (char)(48 + (whole % 10)); while (whole /= 10);
 
     if (neg) *wstr++ = '-';
-    *wstr = '\0';
 
-    _tb_jwrite_strreverse(buf, (wstr - buf) - 1);
+    *wstr = '\0';
+    _tb_jwrite_strreverse(str, wstr - 1);
 }
 
 #endif /* !TB_JWRITE_IMPLEMENTATION */

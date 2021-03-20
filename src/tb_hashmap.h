@@ -51,18 +51,20 @@ typedef struct
  *
  * Returns TB_HASHMAP_OK on success and tb_hashmap_error on failure.
  */
-tb_hashmap_error tb_hashmap_alloc(tb_hashmap* map, size_t (*hash_func)(const void*), int (*cmp_func)(const void*, const void*), size_t initial_capacity);
+tb_hashmap_error tb_hashmap_alloc(tb_hashmap* map, size_t(*hash)(const void*), int (*cmp)(const void*, const void*), size_t initial_capacity);
+tb_hashmap_error tb_hashmap_allocf(tb_hashmap* map, size_t (*hash)(const void*), int (*cmp)(const void*, const void*), size_t initial_capacity, void* (*alloc)(size_t, size_t));
 
 /*
  * Free the hashmap and all associated memory.
  */
 void tb_hashmap_free(tb_hashmap* map);
+void tb_hashmap_freef(tb_hashmap* map, void (*free)(void*));
 
 /*
  * Enable internal memory allocation and management of keys and values.
  */
-void tb_hashmap_set_key_alloc_funcs(tb_hashmap* map, void* (*alloc_func)(const void*), void (*free_func)(void*));
-void tb_hashmap_set_value_alloc_funcs(tb_hashmap* map, void* (*alloc_func)(const void*), void (*free_func)(void*));
+void tb_hashmap_set_key_alloc_funcs(tb_hashmap* map, void* (*alloc)(const void*), void (*free)(void*));
+void tb_hashmap_set_value_alloc_funcs(tb_hashmap* map, void* (*alloc)(const void*), void (*free)(void*));
 
 tb_hashmap_error tb_hashmap_rehash(tb_hashmap* map, size_t new_capacity);
 

@@ -3,65 +3,33 @@
 
 #include <stdlib.h>
 
-typedef unsigned char tb_array_base_type;
+#define TB_ARRAY_HDR_ELEM	size_t
+#define TB_ARRAY_HDR_SIZE	2 * sizeof(TB_ARRAY_HDR_ELEM)
 
-typedef enum
-{
-    TB_ARRAY_OK = 0,
-    TB_ARRAY_ALLOC_ERROR
-} tb_array_error;
+#define tb_array__max(a, b) ((a) >= (b) ? (a) : (b))
 
-typedef struct
-{
-    tb_array_base_type* data;
-    size_t capacity;
-    size_t used;
+#define tb_array__hdr(b) ((size_t*)(void*)(b) - 2)
+#define tb_array__cap(b) tb_array__hdr(b)[0]
+#define tb_array__len(b) tb_array__hdr(b)[1]
 
-    float growth;
+#define tb_array_len(b) ((b) ? tb_array__len(b) : 0)
+#define tb_array_cap(b) ((b) ? tb_array__cap(b) : 0)
 
-    size_t element_size;
-} tb_array;
+#define tb_array_resize(b, n)   (*((void**)&(b)) = tb_array__resize((b), (n), sizeof(*(b))))
+#define tb_array_reserve(b, n)  (*((void**)&(b)) = tb_array__reserve((b), (n), sizeof(*(b))))
+#define tb_array_grow(b, n)     (*((void**)&(b)) = tb_array__grow((b), (n), sizeof(*(b))))
+#define tb_array_free(b)        ((b) ? (free(tb_array__hdr(b)), (b) = NULL) : 0);
 
-/* Allocates a new array and initializes it */
-tb_array_error tb_array_alloc(tb_array* arr, size_t initial_size, size_t element_size, float growth);
+#define tb_array_push(b, v) (tb_array_grow((b), 1), (b)[tb_array__len(b)++] = (v))
 
-/* Frees the array and all associated memory */
-void tb_array_free(tb_array* arr);
+#define tb_array_pack(b)    (tb_array_resize((b), tb_array_len(b)))
+#define tb_array_clear(b)   ((b) ? tb_array__len(b) = 0 : 0)
 
-/* To prevent the array from growing set growth to zero */
-void tb_array_set_growth(tb_array* arr, float growth);
+#define tb_array_last(b)    ((b) + tb_array_len(b))
+#define tb_array_sizeof(b)  (tb_array_len(b) * sizeof(*(b)))
 
-/* Resizes the set to new_size */
-tb_array_error tb_array_resize(tb_array* arr, size_t new_size);
-
-/* Resizes array to free unused capacity */
-tb_array_error tb_array_shrink_to_fit(tb_array* arr);
-
-/* Clears the array (sets arr->used to 0) */
-void tb_array_clear(tb_array* arr);
-
-/* Inserts an element at the end of the array and grows the array if necessary */
-void* tb_array_push(tb_array* arr, void* element);
-
-/* Inserts an element at the given index if the index is not out of bounds */
-void* tb_array_insert(tb_array* arr, void* element, size_t index);
-
-/* Removes the element at the given index */
-void tb_array_remove(tb_array* arr, size_t index);
-
-/* Returns the element at the given index */
-void* tb_array_get(tb_array* arr, size_t index); 
-
-/* Returns the first element */
-void* tb_array_first(tb_array* arr);
-
-/* Returns the last element */
-void* tb_array_last(tb_array* arr);
-
-/* sort array with qsort */
-void tb_array_sort(tb_array* arr, int (*cmp)(const void*, const void*));
-
-/* Searches the array with bsearch and returns the index of the element if found or arr->used else */
-size_t tb_array_search(tb_array* arr, const void* element, int (*cmp)(const void*, const void*));
+void* tb_array__resize(void* buf, size_t new_cap, size_t elem_size);
+void* tb_array__grow(void* buf, size_t increment, size_t elem_size);
+void* tb_array__reserve(void* buf, size_t reserve, size_t elem_size);
 
 #endif /* !TB_ARRAY_H */
