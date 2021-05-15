@@ -1,8 +1,14 @@
 # array
+array: demo/demo_array.c src/tb_array.c
+	gcc demo/demo_array.c src/tb_array.c -o array -Wall -std=c99
 
 # bits
 bits: demo/demo_bits.c src/tb_bits.c
 	gcc demo/demo_bits.c src/tb_bits.c -o bits -Wall -std=c99
+
+# config
+config: demo/demo_config.c src/tb_config.c
+	gcc demo/demo_config.c src/tb_config.c -o config -Wall -std=c99
 
 # file
 

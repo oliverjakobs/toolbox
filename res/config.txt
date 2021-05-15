@@ -1,0 +1,30 @@
+# app
+title: "Frost"
+width: 1024
+height: 800
+opengl: "4.4"
+
+# options
+debug: true
+vsync: false
+
+# fonts
+font: { .path: "res/fonts/OpenSans.ttf", .size: 32.0 }
+gui:  { .path: "res/fonts/ProggyTiny.ttf", .size: 24.0 }
+
+# renderer
+renderer2D:      ["res/shaders/renderer2D.vert", "res/shaders/renderer2D.frag"]
+primitives2D:    ["res/shaders/primitives.vert", "res/shaders/primitives.frag"]
+batchrenderer2D: ["res/shaders/batchrenderer.vert", "res/shaders/batchrenderer.frag"]
+fontrenderer:    ["res/shaders/font.vert", "res/shaders/font.frag"]
+
+# transform
+size: [ 256.0, 128.0 ]
+
+# rigidbody
+type: 0
+halfsize: [ 128.0, 64.0 ]
+offset: [ 0.0, 64.0 ]
+
+# sprite
+texture: "box"

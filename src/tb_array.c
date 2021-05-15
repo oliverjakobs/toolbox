@@ -1,7 +1,9 @@
 #include "tb_array.h"
 
-void* tb_array__resize(void* buf, size_t new_cap, size_t elem_size)
+void* tb_array__resize(void* buf, size_t elem_size, size_t new_cap, int shrink)
 {
+    if (!shrink && buf && new_cap < tb_array__cap(buf)) return buf;
+
     size_t* hdr = realloc(buf ? tb_array__hdr(buf) : NULL, TB_ARRAY_HDR_SIZE + (new_cap * elem_size));
 
     if (!hdr) return NULL; /* out of memory */
@@ -12,21 +14,42 @@ void* tb_array__resize(void* buf, size_t new_cap, size_t elem_size)
     return hdr + 2;
 }
 
-void* tb_array__grow(void* buf, size_t increment, size_t elem_size)
+void* tb_array__insert(void* buf, size_t elem_size, void* value, int (*cmp)(const void*,const void*))
 {
-    if (buf && tb_array__len(buf) + increment < tb_array__cap(buf))
-        return buf;
+    /* array needs to grow */
+    if (!buf || tb_array__len(buf) >= tb_array__cap(buf))
+    {
+        buf = tb_array__resize(buf, tb_array__growth(buf), elem_size, 0);
+        if (!buf) return NULL;
+    }
 
-    size_t new_size = tb_array_len(buf) + increment;
-    size_t new_cap = tb_array__max((buf ? 2 * tb_array__cap(buf) : 1), new_size);
+    /* find location for the new element */
+    size_t index = 0;
+    if (buf && cmp)
+    {
+        while (index < tb_array__len(buf) && cmp(((char*)buf) + index, value) < 0)
+            ++index;
 
-    return tb_array__resize(buf, new_cap, elem_size);
+        /* move entries back to make space for new element if index is not at the end */
+        if (index < tb_array__len(buf))
+        {
+            size_t size = (tb_array__len(buf) - index) * elem_size;
+            memcpy(((char*)buf) + (index + 1), ((char*)buf) + index, size);
+        }
+    }
+
+    tb_array__len(buf)++;
+    return memcpy(((char*)buf) + index, value, elem_size);
 }
 
-void* tb_array__reserve(void* buf, size_t reserve, size_t elem_size)
+void* tb_array__remove(void* buf, size_t elem_size, size_t index)
 {
-    if (buf && reserve < tb_array__cap(buf))
-        return buf;
+    if (buf && tb_array__len(buf) > 0)
+    {
+        size_t size = (tb_array__len(buf) - (index + 1)) * elem_size;
+        memcpy(((char*)buf) + index, ((char*)buf) + (index + 1), size);
 
-    return tb_array__resize(buf, reserve, elem_size);
+        tb_array__len(buf)--;
+    }
+    return buf;
 }
