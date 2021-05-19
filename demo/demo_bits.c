@@ -14,7 +14,7 @@ int main()
 
     i = tb_bits_set(i, 3);
     printf("%d: %s\n", i, tb_bits_str(buf, i));
-
+ 
     i = tb_bits_clear(i, 0);
     printf("%d: %s\n", i, tb_bits_str(buf, i));
 

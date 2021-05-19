@@ -15,7 +15,7 @@
 #define tb_array_len(b) ((b) ? tb_array__len(b) : 0)
 #define tb_array_cap(b) ((b) ? tb_array__cap(b) : 0)
 
-#define tb_array__growth(b)     ((b) ? (2 * tb_array__cap(b)) : 1)
+#define tb_array__growth(b)     ((b) && (tb_array__len(b) >= tb_array__cap(b)) ? (2 * tb_array__cap(b)) : 0)
 #define tb_array__make_space(b) (*((void**)&(b)) = tb_array__resize((b), sizeof(*(b)), tb_array__growth(b), 0))
 
 #define tb_array_resize(b, n)   (*((void**)&(b)) = tb_array__resize((b), sizeof(*(b)), (n), 1))

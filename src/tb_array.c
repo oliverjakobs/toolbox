@@ -1,10 +1,15 @@
 #include "tb_array.h"
 
+#include <stdio.h>
+#include <string.h>
+
 void* tb_array__resize(void* buf, size_t elem_size, size_t new_cap, int shrink)
 {
     if (!shrink && buf && new_cap < tb_array__cap(buf)) return buf;
+    if (!buf && new_cap == 0) new_cap = 1;
 
     size_t* hdr = realloc(buf ? tb_array__hdr(buf) : NULL, TB_ARRAY_HDR_SIZE + (new_cap * elem_size));
+    printf("Realloc %d\n", new_cap);
 
     if (!hdr) return NULL; /* out of memory */
 
