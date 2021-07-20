@@ -240,18 +240,19 @@ char* tb_json_read(char* json, tb_json_element* result, char* query)
     return tb_json_read_param(json, result, query, NULL);
 }
 
+#define TB_JSON_QUERY_BUFFER_SIZE  32
+static char tb_json_query_buffer[TB_JSON_QUERY_BUFFER_SIZE];
+
 char* tb_json_read_format(char* json, tb_json_element* result, const char* query_fmt, ...)
 {
     va_list args;
     va_start(args, query_fmt);
     size_t query_size = vsnprintf(NULL, 0, query_fmt, args);
-    char* query = malloc(query_size + 1);
-    vsnprintf(query, query_size + 1, query_fmt, args);
-    va_end(args);
 
-    json = tb_json_read_param(json, result, query, NULL);
+    if (query_size + 1 < TB_JSON_QUERY_BUFFER_SIZE)
+        vsnprintf(tb_json_query_buffer, query_size + 1, query_fmt, args);
 
-    free(query);
+    json = tb_json_read_param(json, result, tb_json_query_buffer, NULL);
 
     return json;
 }

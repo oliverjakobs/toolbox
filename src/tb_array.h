@@ -6,37 +6,28 @@
 #define TB_ARRAY_HDR_ELEM	size_t
 #define TB_ARRAY_HDR_SIZE	2 * sizeof(TB_ARRAY_HDR_ELEM)
 
-#define tb_array__max(a, b) ((a) >= (b) ? (a) : (b))
+#define tb_array__hdr(b) ((size_t*)(void*)(b) - 2)
+#define tb_array__cap(b) tb_array__hdr(b)[0]
+#define tb_array__len(b) tb_array__hdr(b)[1]
 
-#define tb_array__hdr(a) ((size_t*)(void*)(a) - 2)
-#define tb_array__cap(a) tb_array__hdr(a)[0]
-#define tb_array__len(a) tb_array__hdr(a)[1]
+#define tb_array_len(b) ((b) ? tb_array__len(b) : 0)
+#define tb_array_cap(b) ((b) ? tb_array__cap(b) : 0)
 
-#define tb_array_len(a) ((a) ? tb_array__len(a) : 0)
-#define tb_array_cap(a) ((a) ? tb_array__cap(a) : 0)
+#define tb_array_resize(b, n)   (*((void**)&(b)) = tb_array__resize((b), (n), sizeof(*(b))))
+#define tb_array_reserve(b, n)  (*((void**)&(b)) = tb_array__reserve((b), (n), sizeof(*(b))))
+#define tb_array_grow(b, n)     (*((void**)&(b)) = tb_array__grow((b), (n), sizeof(*(b))))
 
-#define tb_array__growth(a)     ((a) && (tb_array__len(a) >= tb_array__cap(a)) ? (2 * tb_array__cap(a)) : 0)
-#define tb_array__make_space(a) (*((void**)&(a)) = tb_array__resize((a), sizeof(*(a)), tb_array__growth(a), 0))
+#define tb_array_push(b, v) (tb_array_grow((b), 1), (b)[tb_array__len(b)++] = (v))
+#define tb_array_free(b)    (tb_array_resize(b, 0))
 
-#define tb_array_resize(a, n)   (*((void**)&(a)) = tb_array__resize((a), sizeof(*(a)), (n), 1))
-#define tb_array_reserve(a, n)  (*((void**)&(a)) = tb_array__resize((a), sizeof(*(a)), (n), 0))
-#define tb_array_free(a)        ((a) ? (free(tb_array__hdr(a)), (a) = NULL) : 0);
+#define tb_array_pack(b)    (tb_array_resize((b), tb_array_len(b)))
+#define tb_array_clear(b)   ((b) ? tb_array__len(b) = 0 : 0)
 
-#define tb_array_push(a, v)     (tb_array__make_space(a), (a)[tb_array__len(a)++] = (v))
+#define tb_array_last(b)    ((b) + tb_array_len(b))
+#define tb_array_sizeof(b)  (tb_array_len(b) * sizeof(*(b)))
 
-#define tb_array_pack(a)    (tb_array_resize((a), tb_array_len(a)))
-#define tb_array_clear(a)   ((a) ? tb_array__len(a) = 0 : 0)
-
-#define tb_array_last(a)    ((a) + tb_array_len(a))
-#define tb_array_sizeof(a)  (tb_array_len(a) * sizeof(*(a)))
-
-void* tb_array__resize(void* arr, size_t elem_size, size_t new_cap, int shrink);
-
-/* extra functionality */
-#define tb_array_insert(a, v, cmp)  (*((void**)&(a)) = tb_array__insert((a), sizeof(*(a)), (v), (cmp)))
-#define tb_array_remove(a, i)       (*((void**)&(a)) = tb_array__remove((a), sizeof(*(a)), (i)))
-
-void* tb_array__insert(void* arr, size_t elem_size, void* value, int (*cmp)(const void*,const void*));
-void* tb_array__remove(void* arr, size_t elem_size, size_t index);
+void* tb_array__resize(void* buf, size_t new_cap, size_t elem_size);
+void* tb_array__reserve(void* buf, size_t reserve, size_t elem_size);
+void* tb_array__grow(void* buf, size_t increment, size_t elem_size);
 
 #endif /* !TB_ARRAY_H */

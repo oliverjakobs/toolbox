@@ -92,7 +92,6 @@
 #define TB_JSON_INCLUDE_H
 
 #include <stdarg.h>
-#include <stddef.h>
 
 //--------------------------------------------------------------------
 // enums

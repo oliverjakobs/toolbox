@@ -1,65 +1,40 @@
 #include "tb_array.h"
 
-#include <stdio.h>
-#include <string.h>
-
-/*
- * if arr == NULL and new_cap == 0 -> new_cap = 1 (first initialization)
- * if arr != NULL and new_cap < old_cap and not shrink -> no need to resize
- * if realloc failed return NULL
- */
-void* tb_array__resize(void* arr, size_t elem_size, size_t new_cap, int shrink)
+void* tb_array__resize(void* buf, size_t new_cap, size_t elem_size)
 {
-    if (arr && new_cap < tb_array__cap(arr) && !shrink) return arr;
-    if (!arr && new_cap == 0) new_cap = 1;
+    TB_ARRAY_HDR_ELEM* hdr = buf ? tb_array__hdr(buf) : NULL;
 
-    size_t* hdr = realloc(arr ? tb_array__hdr(arr) : NULL, TB_ARRAY_HDR_SIZE + (new_cap * elem_size));
-    printf("Realloc %d\n", new_cap);
+    if (hdr && new_cap == 0)
+    {
+        free(hdr);
+        return NULL;
+    }
 
-    if (!hdr) return NULL; /* out of memory */
+    size_t new_size = TB_ARRAY_HDR_SIZE + (new_cap * elem_size);
+    if (new_size <= TB_ARRAY_HDR_SIZE) return buf; /* removes compiler warning (C6386) */
+        
+    hdr = realloc(hdr, new_size);
+
+    if (!hdr) return NULL; /* new_size == 0 or out of memory */
 
     hdr[0] = new_cap;
-    if (!arr) hdr[1] = 0;
+    if (!buf) hdr[1] = 0;
 
     return hdr + 2;
 }
 
-void* tb_array__insert(void* arr, size_t elem_size, void* value, int (*cmp)(const void*,const void*))
+void* tb_array__grow(void* buf, size_t increment, size_t elem_size)
 {
-    /* array needs to grow */
-    if (!arr || tb_array__len(arr) >= tb_array__cap(arr))
-    {
-        arr = tb_array__resize(arr, tb_array__growth(arr), elem_size, 0);
-        if (!arr) return NULL;
-    }
+    if (buf && tb_array__len(buf) + increment < tb_array__cap(buf)) return buf;
 
-    /* find location for the new element */
-    size_t index = 0;
-    if (arr && cmp)
-    {
-        while (index < tb_array__len(arr) && cmp(((char*)arr) + index, value) < 0)
-            ++index;
+    TB_ARRAY_HDR_ELEM new_size = tb_array_len(buf) + increment;
+    TB_ARRAY_HDR_ELEM new_cap = buf ? 2 * tb_array__cap(buf) : 1;
 
-        /* move entries back to make space for new element if index is not at the end */
-        if (index < tb_array__len(arr))
-        {
-            size_t size = (tb_array__len(arr) - index) * elem_size;
-            memcpy(((char*)arr) + (index + 1), ((char*)arr) + index, size);
-        }
-    }
-
-    tb_array__len(arr)++;
-    return memcpy(((char*)arr) + index, value, elem_size);
+    return tb_array__resize(buf, (new_cap < new_size) ? new_size : new_cap, elem_size);
 }
 
-void* tb_array__remove(void* arr, size_t elem_size, size_t index)
+void* tb_array__reserve(void* buf, size_t reserve, size_t elem_size)
 {
-    if (arr && tb_array__len(arr) > 0)
-    {
-        size_t size = (tb_array__len(arr) - (index + 1)) * elem_size;
-        memcpy(((char*)arr) + index, ((char*)arr) + (index + 1), size);
-
-        tb_array__len(arr)--;
-    }
-    return arr;
+    if (buf && reserve < tb_array__cap(buf)) return buf;
+    return tb_array__resize(buf, reserve, elem_size);
 }
