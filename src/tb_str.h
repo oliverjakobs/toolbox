@@ -19,10 +19,7 @@ char* tb_strsep(char** str_ptr, const char* sep);
 char tb_tolower(char c);
 char tb_toupper(char c);
 
-/* 
- * Fill buf with binary representation of value.
- * Make sure buf is big enough.
- */
-char* tb_bitstr(char* buf, uint8_t value);
+/* Fill buf with binary representation of value. Make sure buf is big enough. */
+char* tb_bitstr(char* buf, char value);
 
 #endif /* !TB_STRING_H */
