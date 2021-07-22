@@ -2,7 +2,12 @@
 
 #include <stdlib.h>
 
-char* tb_file_read(const char* path, const char* mode, size_t* sizeptr)
+char* tb_file_read(const char* path, const char* mode)
+{
+	return tb_file_read_alloc(path, mode, malloc, free);
+}
+
+char* tb_file_read_alloc(const char* path, const char* mode, void* (*mallocf)(size_t), void (*freef)(void*))
 {
 	FILE* file = fopen(path, mode);
 	if (!file) return NULL;
@@ -12,18 +17,17 @@ char* tb_file_read(const char* path, const char* mode, size_t* sizeptr)
 	size_t size = ftell(file);
 	rewind(file);
 
-	char* buffer = malloc(size + 1);
+	char* buffer = mallocf(size + 1);
 	if (buffer)
 	{
 		if (fread(buffer, size, 1, file) != 1)
 		{
-			free(buffer);
+			freef(buffer);
 			fclose(file);
 			return NULL;
 		}
 
 		buffer[size] = '\0'; /* zero terminate buffer */
-		if (sizeptr) *sizeptr = size + 1;
 	}
 
 	fclose(file);

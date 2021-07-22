@@ -1,31 +1,27 @@
+# algorithm
+algorithm: demo/demo_algorithm.c src/tb_algorithm.c
+	gcc demo/demo_algorithm.c src/tb_algorithm.c -o algorithm -Wall -std=c99
+
 # array
 array: demo/demo_array.c src/tb_array.c
 	gcc demo/demo_array.c src/tb_array.c -o array -Wall -std=c99
 
-# bits
-bits: demo/demo_bits.c src/tb_bits.c
-	gcc demo/demo_bits.c src/tb_bits.c -o bits -Wall -std=c99
-
-# config
-config: demo/demo_config.c src/tb_config.c
-	gcc demo/demo_config.c src/tb_config.c -o config -Wall -std=c99
-
 # file
+file: demo/demo_file.c src/tb_file.c
+	gcc demo/demo_file.c src/tb_file.c -o file -Wall -std=c99
 
 # hashmap
+hashmap: demo/demo_hashmap.c src/tb_hashmap.c
+	gcc demo/demo_hashmap.c src/tb_hashmap.c -o hashmap -Wall -std=c99
 
 # ini
-
-# json
-json: demo/demo_json.c src/tb_json.c
-	gcc demo/demo_json.c src/tb_json.c -o json -Wall -std=c99
-
-# jwrite
-jwrite: demo/demo_jwrite.c src/tb_jwrite.c
-	gcc demo/demo_jwrite.c src/tb_jwrite.c -o jwrite -Wall -std=c99
+ini: demo/demo_ini.c src/tb_ini.c
+	gcc demo/demo_ini.c src/tb_ini.c -o ini -Wall -std=c99
 
 # mem
+mem: demo/demo_mem.c src/tb_mem.c
+	gcc demo/demo_mem.c src/tb_mem.c -o mem -Wall -std=c99
 
 # str
-
-# toolbox
+str: demo/demo_str.c src/tb_str.c
+	gcc demo/demo_str.c src/tb_str.c -o str -Wall -std=c99

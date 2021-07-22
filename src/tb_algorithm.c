@@ -1,4 +1,4 @@
-#include "toolbox.h"
+#include "tb_algorithm.h"
 
 void tb_swap(void** a, void** b)
 {
@@ -77,4 +77,20 @@ double tb_clampd(double value, double min, double max)
 {
     const double t = value < min ? min : value;
     return t > max ? max : t;
+}
+
+uint8_t tb_set_bit(uint8_t value, uint8_t position)     { return value | (1 << position); }
+uint8_t tb_clear_bit(uint8_t value, uint8_t position)  { return value & ~(1 << position); }
+uint8_t tb_flip_bit(uint8_t value, uint8_t position)   { return value ^ (1 << position); }
+uint8_t tb_get_bit(uint8_t value, uint8_t position)    { return (value & (1 << position)) > 0; }
+
+uint8_t tb_count_bits(uint8_t value)
+{
+    uint8_t count = 0;
+    while (value)
+    {
+        value &= (value - 1);
+        count++;
+    }
+    return count;
 }

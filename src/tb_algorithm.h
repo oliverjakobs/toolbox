@@ -1,5 +1,5 @@
-#ifndef TOOLBOX_H
-#define TOOLBOX_H
+#ifndef TB_ALGORITHM_H
+#define TB_ALGORITHM_H
 
 #include <stdlib.h>
 #include <stddef.h>
@@ -39,4 +39,16 @@ int64_t tb_clamp64(int64_t value, int64_t min, int64_t max);
 float tb_clampf(float value, float min, float max);
 double tb_clampd(double value, double min, double max);
 
-#endif /* !TOOLBOX_H */
+/* Set the bit at the given position to 1. */
+uint8_t tb_set_bit(uint8_t value, uint8_t position);
+/* Set the bit at the given position to 0. */
+uint8_t tb_clear_bit(uint8_t value, uint8_t position);
+/* Flip the bit at the given position. */
+uint8_t tb_flip_bit(uint8_t value, uint8_t position);
+/* Return the bit at the given position. */
+uint8_t tb_get_bit(uint8_t value, uint8_t position);
+
+/* Count the set bits (1) in the binary representation of value using Brian Kernighan’s algorithm. */
+uint8_t tb_count_bits(uint8_t value);
+
+#endif /* !TB_ALGORITHM_H */

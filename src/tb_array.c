@@ -12,10 +12,10 @@ void* tb_array__resize(void* buf, size_t new_cap, size_t elem_size)
 
     size_t new_size = TB_ARRAY_HDR_SIZE + (new_cap * elem_size);
     if (new_size <= TB_ARRAY_HDR_SIZE) return buf; /* removes compiler warning (C6386) */
-        
+
     hdr = realloc(hdr, new_size);
 
-    if (!hdr) return NULL; /* new_size == 0 or out of memory */
+    if (!hdr) return NULL; /* out of memory */
 
     hdr[0] = new_cap;
     if (!buf) hdr[1] = 0;
