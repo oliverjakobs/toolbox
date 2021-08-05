@@ -19,11 +19,8 @@ char* tb_strsep(char** str_ptr, const char* sep);
 char tb_tolower(char c);
 char tb_toupper(char c);
 
-/* 
- * Fill buf with binary representation of value.
- * Make sure buf is big enough.
- */
-char* tb_bitstr(char* buf, uint8_t value);
+/* Fill buf with binary representation of value. Make sure buf is big enough. */
+char* tb_bitstr(char* buf, char value);
 
 #endif /* !TB_STRING_H */
 
@@ -109,12 +106,12 @@ char* tb_strsep(char** str_ptr, const char* sep)
 char tb_tolower(char c) { return (c >= 'A' && c <= 'Z') ? 'a' + (c - 'A') : c; }
 char tb_toupper(char c) { return (c >= 'a' && c <= 'z') ? 'A' + (c - 'a') : c; }
 
-char* tb_bits_str(char* buf, uint8_t value)
+char* tb_bitstr(char* buf, char value)
 {
-    uint8_t bit = 0;
-    uint8_t bits = sizeof(uint8_t) * 8;
+    char bit = 0;
+    char bits = sizeof(char) * 8;
 
-    for (uint8_t i = 1 << (bits - 1); i > 0; i = i / 2)
+    for (char i = 1 << (bits - 1); i > 0; i = i / 2)
         buf[bit++] = (value & i) ? '1' : '0'; 
 
     buf[bit] = '\0';
