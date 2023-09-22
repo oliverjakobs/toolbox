@@ -58,9 +58,7 @@ uint8_t tb_count_bits(uint8_t value);
  * ----| IMPLEMENTATION |-------------------------------------------------------
  * -----------------------------------------------------------------------------
  */
-
-#ifdef TB_ALOGRITHM_IMPLEMENTATION
-
+#ifdef TB_ALGORITHM_IMPLEMENTATION
 
 void tb_swap(void** a, void** b)
 {
@@ -155,9 +153,7 @@ uint8_t tb_count_bits(uint8_t value)
         count++;
     }
     return count;
-}
-
-#endif /* !TB_ALOGRITHM_IMPLEMENTATION */
+}#endif /* !TB_ALGORITHM_IMPLEMENTATION */
 
 /*
 MIT License

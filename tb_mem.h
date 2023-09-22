@@ -29,9 +29,7 @@ void* tb_mem_dup(tb_allocator* allocator, const void* src, size_t size);
  * ----| IMPLEMENTATION |-------------------------------------------------------
  * -----------------------------------------------------------------------------
  */
-
 #ifdef TB_MEM_IMPLEMENTATION
-
 
 #include <string.h>
 
@@ -92,8 +90,6 @@ void* tb_mem_dup(tb_allocator* allocator, const void* src, size_t size)
     void* dst = tb_mem_malloc(allocator, size);
     return dst ? memcpy(dst, src, size) : NULL;
 }
-
-
 #endif /* !TB_MEM_IMPLEMENTATION */
 
 /*

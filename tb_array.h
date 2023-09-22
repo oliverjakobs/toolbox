@@ -37,9 +37,7 @@ void* tb_array__grow(void* buf, size_t increment, size_t elem_size);
  * ----| IMPLEMENTATION |-------------------------------------------------------
  * -----------------------------------------------------------------------------
  */
-
 #ifdef TB_ARRAY_IMPLEMENTATION
-
 
 void* tb_array__resize(void* buf, size_t new_cap, size_t elem_size)
 {
@@ -78,9 +76,7 @@ void* tb_array__reserve(void* buf, size_t reserve, size_t elem_size)
 {
     if (buf && reserve < tb_array__cap(buf)) return buf;
     return tb_array__resize(buf, reserve, elem_size);
-}
-
-#endif /* !TB_ARRAY_IMPLEMENTATION */
+}#endif /* !TB_ARRAY_IMPLEMENTATION */
 
 /*
 MIT License

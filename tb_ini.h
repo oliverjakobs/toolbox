@@ -76,9 +76,7 @@ const char* tb_ini_get_error_desc(tb_ini_error error);
  * ----| IMPLEMENTATION |-------------------------------------------------------
  * -----------------------------------------------------------------------------
  */
-
 #ifdef TB_INI_IMPLEMENTATION
-
 
 #include <string.h>
 #include <stdlib.h>
@@ -400,9 +398,7 @@ const char* tb_ini_get_error_desc(tb_ini_error error)
     case TB_INI_BAD_PROPERTY:       return "bad property";
     default:                        return "unkown error";
     }
-}
-
-#endif /* !TB_INI_IMPLEMENTATION */
+}#endif /* !TB_INI_IMPLEMENTATION */
 
 /*
 MIT License

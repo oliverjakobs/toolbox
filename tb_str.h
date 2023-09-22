@@ -29,9 +29,7 @@ char* tb_bitstr(char* buf, char value);
  * ----| IMPLEMENTATION |-------------------------------------------------------
  * -----------------------------------------------------------------------------
  */
-
 #ifdef TB_STR_IMPLEMENTATION
-
 
 #include <stdlib.h>
 
@@ -117,9 +115,7 @@ char* tb_bitstr(char* buf, char value)
     buf[bit] = '\0';
 
     return buf;
-}
-
-#endif /* !TB_STR_IMPLEMENTATION */
+}#endif /* !TB_STR_IMPLEMENTATION */
 
 /*
 MIT License
